@@ -172,10 +172,28 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Temporary Debug Route for Error Logs
+app.get('/api/debug-errors', (req, res) => {
+  try {
+    const fs = require('fs');
+    const path = require('path');
+    const logPath = path.join(__dirname, '../logs/error.log');
+    if (fs.existsSync(logPath)) {
+      const content = fs.readFileSync(logPath, 'utf8');
+      res.status(200).send(`<pre>${content}</pre>`);
+    } else {
+      res.status(200).send('No error log file found.');
+    }
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+});
+
 // API 404 Handler
 app.use('/api/*', (req, res) => {
   res.status(404).json({ success: false, message: 'API Route Not Found' });
 });
+
 
 // Staging test route for 500 error page
 if (process.env.NODE_ENV !== 'production') {
