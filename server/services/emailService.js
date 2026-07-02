@@ -16,11 +16,14 @@ const offerLetterService = require('./offerLetterService');
 class EmailService {
   constructor() {
     this.transporter = nodemailer.createTransport({
-      service: 'gmail',
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true,
       auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
-      }
+      },
+      family: 4 // Force IPv4 to prevent IPv6 network unreachable errors (ENETUNREACH) on Render
     });
 
     this.companyName = process.env.COMPANY_NAME || 'NextGenZ Tech';

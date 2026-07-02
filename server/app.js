@@ -58,7 +58,13 @@ app.use((req, res, next) => {
 });
 
 // CORS strictly limited to production domain and local dev
-const allowedOrigins = ['https://nextgenztech.com', 'http://localhost:3000'];
+const allowedOrigins = [
+  'https://nextgenztech.online',
+  'https://www.nextgenztech.online',
+  'https://nextgenz.onrender.com',
+  'https://nextgenztech.com',
+  'http://localhost:3000'
+];
 app.use(cors({
   origin: function(origin, callback) {
     if (!origin || allowedOrigins.includes(origin)) {
