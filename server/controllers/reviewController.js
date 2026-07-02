@@ -1,14 +1,5 @@
 const Review = require('../models/Review');
-const nodemailer = require('nodemailer');
-
-// Configure Nodemailer
-const transporter = nodemailer.createTransport({
-    service: 'gmail', // Ensure your Gmail or SMTP is configured
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-    }
-});
+const emailService = require('../services/emailService');
 
 // @route   POST /api/reviews
 // @desc    Submit a new review
@@ -35,11 +26,10 @@ exports.submitReview = async (req, res, next) => {
         await newReview.save();
 
         // Send Email Notification to Admin
-        const mailOptions = {
-            from: process.env.EMAIL_USER,
-            to: process.env.ADMIN_EMAIL || process.env.EMAIL_USER,
-            subject: 'New Review Submitted - Awaiting Approval',
-            html: `
+        emailService.sendEmail(
+            process.env.ADMIN_EMAIL || process.env.EMAIL_USER,
+            'New Review Submitted - Awaiting Approval',
+            `
                 <h3>New Review Submitted</h3>
                 <p><strong>Name:</strong> ${fullName}</p>
                 <p><strong>Domain:</strong> ${domain}</p>
@@ -47,13 +37,7 @@ exports.submitReview = async (req, res, next) => {
                 <p><strong>Review:</strong> ${review}</p>
                 <p>Please log in to the admin dashboard to approve or reject this review.</p>
             `
-        };
-
-        if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
-            transporter.sendMail(mailOptions, (error, info) => {
-                if (error) console.error("Email Error:", error);
-            });
-        }
+        );
 
         res.status(201).json({ success: true, message: 'Review submitted successfully. Awaiting approval.' });
     } catch (error) {
