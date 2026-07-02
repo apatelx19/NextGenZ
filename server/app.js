@@ -178,6 +178,17 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Temporary Test Route for Email SMTP Connection
+app.get('/api/test-email-smtp', async (req, res) => {
+  try {
+    const emailService = require('./services/emailService');
+    const verifyResult = await emailService.transporter.verify();
+    res.status(200).json({ success: true, message: 'SMTP ready', verifyResult });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message, stack: err.stack });
+  }
+});
+
 // API 404 Handler
 app.use('/api/*', (req, res) => {
   res.status(404).json({ success: false, message: 'API Route Not Found' });
