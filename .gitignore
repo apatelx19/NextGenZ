@@ -1,0 +1,6 @@
+node_modules/
+venv/
+.env
+.DS_Store
+backup-unused/
+client/website/assets/.DS_Store

@@ -1,0 +1,21 @@
+{
+  "name": "NextGenZ Tech",
+  "short_name": "NextGenZ",
+  "description": "Empowering the Next Generation of Tech Leaders",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0b0914",
+  "theme_color": "#a855f7",
+  "icons": [
+    {
+      "src": "/assets/brand_logo.png",
+      "sizes": "192x192",
+      "type": "image/jpeg"
+    },
+    {
+      "src": "/assets/brand_logo.png",
+      "sizes": "512x512",
+      "type": "image/jpeg"
+    }
+  ]
+}
