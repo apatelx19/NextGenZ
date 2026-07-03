@@ -117,9 +117,16 @@ app.use('/api/upload-resume', uploadResumeLimiter);
 app.use('/api/upload-payment-screenshot', uploadScreenshotLimiter);
 
 // Static Files - Serve client/website, client/admin, and client/assets
-// Using 1-day caching in production
+// Using 1-day caching in production for static assets, but disabling caching for HTML pages to ensure updates load immediately
 const staticOptions = {
-  maxAge: process.env.NODE_ENV === 'production' ? '1d' : 0
+  maxAge: process.env.NODE_ENV === 'production' ? '1d' : 0,
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith('.html') || filePath.endsWith('/')) {
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+    }
+  }
 };
 app.use(express.static(path.join(__dirname, '../client/website'), staticOptions));
 
