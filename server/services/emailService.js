@@ -19,26 +19,88 @@ class EmailService {
     this.transporter = nodemailer.createTransport({
       host: 'smtp.gmail.com',
       port: 587,
-      secure: false, // Use STARTTLS on port 587
+      secure: false,
       auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
       },
-      family: 4 // Force IPv4 locally
+      family: 4
     });
 
     this.companyName = process.env.COMPANY_NAME || 'NextGenZ Tech';
     this.companyEmail = process.env.COMPANY_EMAIL || 'admin@nextgenz.tech';
   }
 
+  async getGmailAccessToken() {
+    try {
+      const response = await axios.post('https://oauth2.googleapis.com/token', {
+        client_id: process.env.GMAIL_CLIENT_ID,
+        client_secret: process.env.GMAIL_CLIENT_SECRET,
+        refresh_token: process.env.GMAIL_REFRESH_TOKEN,
+        grant_type: 'refresh_token'
+      });
+      return response.data.access_token;
+    } catch (error) {
+      const errorDetails = error.response && error.response.data 
+        ? JSON.stringify(error.response.data) 
+        : error.message;
+      throw new Error(`Failed to refresh Gmail access token: ${errorDetails}`);
+    }
+  }
+
   async sendEmail(to, subject, htmlContent, attachments = []) {
     try {
-      // 1. If SENDGRID_API_KEY is configured, use SendGrid HTTP API (recommended)
+      // 1. If GMAIL_REFRESH_TOKEN is configured, use Gmail HTTP API (Recommended for Render Free Tier)
+      if (process.env.GMAIL_REFRESH_TOKEN) {
+        const fromEmail = process.env.EMAIL_USER || 'nextgenztech.admin@gmail.com';
+        const MailComposer = require('nodemailer/lib/mail-composer');
+
+        const mailOptions = {
+          from: `"${this.companyName}" <${fromEmail}>`,
+          to,
+          subject,
+          html: htmlContent,
+          attachments: attachments
+        };
+
+        // Compile raw MIME message (RFC 2822)
+        const composer = new MailComposer(mailOptions);
+        const rawBuffer = await new Promise((resolve, reject) => {
+          composer.compile().build((err, message) => {
+            if (err) reject(err);
+            else resolve(message);
+          });
+        });
+
+        // Encode as base64url
+        const base64url = rawBuffer.toString('base64')
+          .replace(/\+/g, '-')
+          .replace(/\//g, '_')
+          .replace(/=+$/, '');
+
+        // Fetch fresh Access Token
+        const accessToken = await this.getGmailAccessToken();
+
+        // POST request to Gmail API (Standard HTTPS Port 443 - never blocked on Render)
+        await axios.post(
+          'https://gmail.googleapis.com/gmail/v1/users/me/messages/send',
+          { raw: base64url },
+          {
+            headers: {
+              'Authorization': `Bearer ${accessToken}`,
+              'Content-Type': 'application/json'
+            }
+          }
+        );
+
+        logger.info(`✅ Email Sent Successfully to ${to} via Gmail HTTP API`);
+        return true;
+      }
+
+      // 2. If SENDGRID_API_KEY is configured, use SendGrid HTTP API (Fallback 1)
       if (process.env.SENDGRID_API_KEY) {
-        // Since we are using Single Sender Verification, sender MUST be the verified Gmail address
         const fromEmail = process.env.EMAIL_USER || 'nextgenztech.admin@gmail.com';
         
-        // Format attachments for SendGrid API (requires base64 content)
         const formattedAttachments = attachments.map(att => {
           let contentBase64 = '';
           if (Buffer.isBuffer(att.content)) {
@@ -77,7 +139,7 @@ class EmailService {
           payload.attachments = formattedAttachments;
         }
 
-        const response = await axios.post('https://api.sendgrid.com/v3/mail/send', payload, {
+        await axios.post('https://api.sendgrid.com/v3/mail/send', payload, {
           headers: {
             'Authorization': `Bearer ${process.env.SENDGRID_API_KEY}`,
             'Content-Type': 'application/json'
@@ -88,45 +150,9 @@ class EmailService {
         return true;
       }
 
-      // 2. If RESEND_API_KEY is configured, use Resend HTTP API (fallback)
-      if (process.env.RESEND_API_KEY) {
-        const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
-        
-        const formattedAttachments = attachments.map(att => {
-          let contentBase64 = '';
-          if (Buffer.isBuffer(att.content)) {
-            contentBase64 = att.content.toString('base64');
-          } else if (typeof att.content === 'string') {
-            contentBase64 = Buffer.from(att.content).toString('base64');
-          }
-          return {
-            filename: att.filename,
-            content: contentBase64
-          };
-        });
-
-        const payload = {
-          from: `"${this.companyName}" <${fromEmail}>`,
-          to: [to],
-          subject,
-          html: htmlContent,
-          attachments: formattedAttachments
-        };
-
-        const response = await axios.post('https://api.resend.com/emails', payload, {
-          headers: {
-            'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
-            'Content-Type': 'application/json'
-          }
-        });
-
-        logger.info(`✅ Email Sent Successfully to ${to} via Resend (ID: ${response.data.id})`);
-        return true;
-      }
-
       // 3. Fallback to Nodemailer SMTP (good for local dev / local testing)
       if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-        logger.warn('⚠️  Email skipped: Missing SendGrid, Resend, or SMTP credentials in environment variables.');
+        logger.warn('⚠️  Email skipped: Missing credentials (Gmail API, SendGrid, or SMTP) in environment variables.');
         return false;
       }
 
