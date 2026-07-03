@@ -33,11 +33,65 @@ class EmailService {
 
   async sendEmail(to, subject, htmlContent, attachments = []) {
     try {
-      // 1. If RESEND_API_KEY is configured, use Resend HTTP API (recommended for Render)
+      // 1. If SENDGRID_API_KEY is configured, use SendGrid HTTP API (recommended)
+      if (process.env.SENDGRID_API_KEY) {
+        // Since we are using Single Sender Verification, sender MUST be the verified Gmail address
+        const fromEmail = process.env.EMAIL_USER || 'nextgenztech.admin@gmail.com';
+        
+        // Format attachments for SendGrid API (requires base64 content)
+        const formattedAttachments = attachments.map(att => {
+          let contentBase64 = '';
+          if (Buffer.isBuffer(att.content)) {
+            contentBase64 = att.content.toString('base64');
+          } else if (typeof att.content === 'string') {
+            contentBase64 = Buffer.from(att.content).toString('base64');
+          }
+          return {
+            filename: att.filename,
+            content: contentBase64,
+            type: att.contentType || 'application/pdf',
+            disposition: 'attachment'
+          };
+        });
+
+        const payload = {
+          personalizations: [
+            {
+              to: [{ email: to }]
+            }
+          ],
+          from: {
+            email: fromEmail,
+            name: this.companyName
+          },
+          subject: subject,
+          content: [
+            {
+              type: 'text/html',
+              value: htmlContent
+            }
+          ]
+        };
+
+        if (formattedAttachments.length > 0) {
+          payload.attachments = formattedAttachments;
+        }
+
+        const response = await axios.post('https://api.sendgrid.com/v3/mail/send', payload, {
+          headers: {
+            'Authorization': `Bearer ${process.env.SENDGRID_API_KEY}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        logger.info(`✅ Email Sent Successfully to ${to} via SendGrid`);
+        return true;
+      }
+
+      // 2. If RESEND_API_KEY is configured, use Resend HTTP API (fallback)
       if (process.env.RESEND_API_KEY) {
         const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
         
-        // Format attachments for Resend API (requires base64 content)
         const formattedAttachments = attachments.map(att => {
           let contentBase64 = '';
           if (Buffer.isBuffer(att.content)) {
@@ -70,9 +124,9 @@ class EmailService {
         return true;
       }
 
-      // 2. Fallback to Nodemailer SMTP (good for local dev / local testing)
+      // 3. Fallback to Nodemailer SMTP (good for local dev / local testing)
       if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-        logger.warn('⚠️  Email skipped: Missing RESEND_API_KEY or SMTP credentials in environment variables.');
+        logger.warn('⚠️  Email skipped: Missing SendGrid, Resend, or SMTP credentials in environment variables.');
         return false;
       }
 
