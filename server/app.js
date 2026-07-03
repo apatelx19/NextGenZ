@@ -163,6 +163,14 @@ app.get('/api/debug-email', async (req, res) => {
     const emailService = require('./services/emailService');
     const targetEmail = req.query.to || process.env.EMAIL_USER;
     
+    let tokenDetails = {};
+    try {
+      const token = await emailService.getGmailAccessToken();
+      tokenDetails = { success: true, tokenLength: token.length };
+    } catch (tokenErr) {
+      tokenDetails = { success: false, error: tokenErr.message };
+    }
+
     console.log(`Sending diagnostic email to ${targetEmail}...`);
     const success = await emailService.sendEmail(
       targetEmail,
@@ -174,6 +182,7 @@ app.get('/api/debug-email', async (req, res) => {
       success, 
       method: process.env.GMAIL_REFRESH_TOKEN ? 'GmailAPI' : (process.env.SENDGRID_API_KEY ? 'SendGrid' : 'SMTP'),
       targetEmail,
+      tokenDetails,
       env: {
         EMAIL_USER: process.env.EMAIL_USER,
         GMAIL_REFRESH_TOKEN_exists: !!process.env.GMAIL_REFRESH_TOKEN,
