@@ -731,6 +731,16 @@ body.bg-dark-active .carousel-btn,
     background-size: 16px;
 }
 
+.form select option {
+    background-color: var(--paper-light);
+    color: var(--ink-light);
+}
+
+.bg-dark .form select option {
+    background-color: var(--paper-dark);
+    color: var(--ink-dark);
+}
+
 .form textarea {
     min-height: 120px;
     resize: vertical;
