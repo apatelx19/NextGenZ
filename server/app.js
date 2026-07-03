@@ -159,25 +159,33 @@ app.use('/api', reviewRoutes); // Public and Admin Review routes
 
 // Temporary Debug Route for Email Logs
 app.get('/api/debug-email', async (req, res) => {
-  const dns = require('dns');
+  const dns = require('dns').promises;
   const nodemailer = require('nodemailer');
   const results = {};
 
-  const lookupIPv4 = (hostname, options, callback) => {
-    return dns.lookup(hostname, { family: 4 }, callback);
-  };
+  let targetIp;
+  try {
+    const ips = await dns.resolve4('smtp.gmail.com');
+    targetIp = ips[0];
+    results.dnsResolve = { success: true, ips, selected: targetIp };
+  } catch (err) {
+    results.dnsResolve = { success: false, error: err.message };
+    return res.status(500).json({ success: false, results });
+  }
 
   // Test SMTPS (465)
   try {
     const transporter465 = nodemailer.createTransport({
-      host: 'smtp.gmail.com',
+      host: targetIp,
       port: 465,
       secure: true,
       auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
       },
-      lookup: lookupIPv4,
+      tls: {
+        servername: 'smtp.gmail.com'
+      },
       connectionTimeout: 5000,
       greetingTimeout: 5000
     });
@@ -190,14 +198,16 @@ app.get('/api/debug-email', async (req, res) => {
   // Test STARTTLS (587)
   try {
     const transporter587 = nodemailer.createTransport({
-      host: 'smtp.gmail.com',
+      host: targetIp,
       port: 587,
       secure: false,
       auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
       },
-      lookup: lookupIPv4,
+      tls: {
+        servername: 'smtp.gmail.com'
+      },
       connectionTimeout: 5000,
       greetingTimeout: 5000
     });
