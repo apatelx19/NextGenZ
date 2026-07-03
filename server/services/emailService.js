@@ -1,5 +1,6 @@
 const nodemailer = require('nodemailer');
-require('dotenv').config({ path: '../.env' }); // Adjust path based on where it's called, but process.env should be loaded in app.js
+const axios = require('axios');
+require('dotenv').config({ path: '../.env' });
 const logger = require('../utils/logger');
 
 // Import Templates
@@ -23,17 +24,55 @@ class EmailService {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
       },
-      family: 4 // Force IPv4 to prevent IPv6 network unreachable errors (ENETUNREACH) on Render
+      family: 4 // Force IPv4 locally
     });
 
     this.companyName = process.env.COMPANY_NAME || 'NextGenZ Tech';
     this.companyEmail = process.env.COMPANY_EMAIL || 'admin@nextgenz.tech';
   }
 
-  async sendEmail(to, subject, htmlContent, attachments = [], retries = 0) {
+  async sendEmail(to, subject, htmlContent, attachments = []) {
     try {
+      // 1. If RESEND_API_KEY is configured, use Resend HTTP API (recommended for Render)
+      if (process.env.RESEND_API_KEY) {
+        const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
+        
+        // Format attachments for Resend API (requires base64 content)
+        const formattedAttachments = attachments.map(att => {
+          let contentBase64 = '';
+          if (Buffer.isBuffer(att.content)) {
+            contentBase64 = att.content.toString('base64');
+          } else if (typeof att.content === 'string') {
+            contentBase64 = Buffer.from(att.content).toString('base64');
+          }
+          return {
+            filename: att.filename,
+            content: contentBase64
+          };
+        });
+
+        const payload = {
+          from: `"${this.companyName}" <${fromEmail}>`,
+          to: [to],
+          subject,
+          html: htmlContent,
+          attachments: formattedAttachments
+        };
+
+        const response = await axios.post('https://api.resend.com/emails', payload, {
+          headers: {
+            'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        logger.info(`✅ Email Sent Successfully to ${to} via Resend (ID: ${response.data.id})`);
+        return true;
+      }
+
+      // 2. Fallback to Nodemailer SMTP (good for local dev / local testing)
       if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-        logger.warn('⚠️  Email skipped: Missing EMAIL_USER or EMAIL_PASS in environment variables.');
+        logger.warn('⚠️  Email skipped: Missing RESEND_API_KEY or SMTP credentials in environment variables.');
         return false;
       }
 
@@ -45,22 +84,15 @@ class EmailService {
         attachments: attachments
       };
 
-      const info = await this.transporter.sendMail(mailOptions);
-      logger.info(`✅ Email Sent Successfully to ${to}`);
+      await this.transporter.sendMail(mailOptions);
+      logger.info(`✅ Email Sent Successfully to ${to} via SMTP`);
       return true;
+
     } catch (error) {
-      // Determine if error is transient (network timeout, 4xx/5xx SMTP code excluding auth)
-      const isTransient = error.code === 'ETIMEDOUT' || error.code === 'ECONNRESET' || error.code === 'ESOCKETTIMEDOUT' || error.code === 'ENOTFOUND' || (error.responseCode && error.responseCode >= 400 && error.responseCode !== 535 && error.responseCode !== 400);
-      
-      if (isTransient && retries < 3) {
-        const delay = Math.pow(2, retries) * 1000;
-        logger.warn(`⚠️ Transient email error for ${to}. Retrying in ${delay}ms... (Attempt ${retries + 1}/3)`);
-        await new Promise(res => setTimeout(res, delay));
-        return this.sendEmail(to, subject, htmlContent, attachments, retries + 1);
-      }
-      
-      logger.error(`❌ Email Failed to ${to} after ${retries} retries`);
-      logger.error(error.message);
+      const errorMsg = error.response && error.response.data 
+        ? JSON.stringify(error.response.data) 
+        : error.message;
+      logger.error(`❌ Email Failed to ${to}: ${errorMsg}`);
       return false;
     }
   }
