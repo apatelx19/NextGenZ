@@ -17,15 +17,7 @@ exports.submitDirectApplication = async (req, res, next) => {
       }
     }
 
-    if (safeEmail || safePhone) {
-      const existingApp = await Application.findOne({
-        $or: [{ email: safeEmail }, { phone: safePhone }],
-        status: { $ne: "Rejected" } 
-      });
-      if (existingApp) {
-        return res.status(400).json({ error: 'An application with this email or phone number already exists.' });
-      }
-    }
+
     
     const applicationData = req.body;
     applicationData.status = 'Pending Payment Verification';
