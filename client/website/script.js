@@ -219,8 +219,8 @@ document.addEventListener('keydown', (e) => {
   }
 });
 
-// Form Submit - Shows UPI Modal
-form.addEventListener("submit", (e) => {
+// Form Submit - Initiates Razorpay Checkout
+form.addEventListener("submit", async (e) => {
   e.preventDefault();
 
   if (selectedDomain.value === "") {
@@ -239,61 +239,114 @@ form.addEventListener("submit", (e) => {
     return;
   }
 
-  try {
+  setLoading(true);
 
-    // Calculate price based on plan
-    let amount = 1999; // default Gold
+  try {
     const planEl = document.getElementById("selectedPlan");
-    const plan = planEl ? planEl.value : null;
-    if (plan) {
-      if (plan === "Normal") amount = 999;
-      else if (plan === "Premium") amount = 2999;
+    const plan = planEl ? planEl.value : "Gold";
+
+    // 1. Upload Resume to Cloudinary first
+    buttonText.textContent = "Uploading Resume...";
+    const uploadData = await uploadResumeToServer(selectedFile);
+
+    // 2. Create Razorpay Payment Order on the backend
+    buttonText.textContent = "Initiating Payment Gateway...";
+    const orderResponse = await fetch("/api/payment/create-order", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ plan })
+    });
+
+    const orderData = await orderResponse.json();
+    if (!orderResponse.ok) {
+      throw new Error(orderData.message || "Failed to initiate payment transaction.");
     }
-    
-    const upiAmountEl = document.getElementById("upi-amount");
-    if (upiAmountEl) upiAmountEl.textContent = amount;
-    
-    // Generate UPI URI and QR code
-    const upiId = "aryajpatelssk@oksbi";
-    const upiName = "NextGenZ Tech";
-    const upiString = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(upiName)}&am=${amount}&cu=INR`;
-    
-    // Set Mobile Deep Link
-    const upiDeepLink = document.getElementById("upi-deep-link");
-    if (upiDeepLink) upiDeepLink.href = upiString;
-    
-    const upiMobileBtn = document.getElementById("upi-mobile-button");
-    if (upiMobileBtn) upiMobileBtn.href = upiString;
-    
-    // Generate QR using local library (Bypass Adblockers)
-    const qrContainer = document.getElementById("upi-qr-container");
-    if (qrContainer) {
-      // Clear previous QR if any
-      qrContainer.innerHTML = "";
-      // Create new QR Code
-      new QRCode(qrContainer, {
-        text: upiString,
-        width: 200,
-        height: 200,
-        colorDark: "#000000",
-        colorLight: "#ffffff",
-        correctLevel: QRCode.CorrectLevel.M
-      });
-    }
-    
-    // Show UPI Modal after a tiny delay to prevent browser layout crash
-    setTimeout(() => {
-      const upiModal = document.getElementById("upi-modal");
-      if (upiModal) {
-        upiModal.classList.add('show');
-      } else {
-        showCustomAlert("⚠️ Payment modal could not be loaded.");
+
+    // 3. Open Razorpay Checkout Modal
+    const options = {
+      key: orderData.key,
+      amount: orderData.amount,
+      currency: orderData.currency,
+      name: "NextGenZ Tech",
+      description: "Internship Application Fee",
+      image: "assets/logo.png", // Added brand logo support
+      order_id: orderData.orderId,
+      handler: async function (response) {
+        try {
+          setLoading(true);
+          buttonText.textContent = "Verifying Payment & Submitting...";
+
+          const applicationData = {
+            fullName: document.getElementById("fullName").value,
+            email: document.getElementById("email").value,
+            phone: document.getElementById("phone").value,
+            college: document.getElementById("college").value,
+            course: document.getElementById("course").value,
+            year: document.getElementById("year").value,
+            domain: selectedDomain.value,
+            plan: plan,
+            resume: {
+              url: uploadData.fileUrl,
+              publicId: uploadData.publicId,
+              fileName: selectedFile.name
+            },
+            linkedin: document.getElementById("linkedin").value,
+            github: document.getElementById("github").value,
+            whyJoin: document.getElementById("whyJoin").value,
+
+            // Razorpay verify details
+            razorpay_payment_id: response.razorpay_payment_id,
+            razorpay_order_id: response.razorpay_order_id,
+            razorpay_signature: response.razorpay_signature
+          };
+
+          const submitResponse = await fetch("/api/submit-application", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(applicationData)
+          });
+
+          const submitData = await submitResponse.json();
+          if (!submitResponse.ok) {
+            throw new Error(submitData.error || "Failed to submit verified application.");
+          }
+
+          // Open success modal
+          openModal('successModal');
+        } catch (submitErr) {
+          console.error("Submission Error:", submitErr);
+          showCustomAlert(`❌ Application Error: ${submitErr.message}`);
+        } finally {
+          setLoading(false);
+        }
+      },
+      prefill: {
+        name: document.getElementById("fullName").value,
+        email: document.getElementById("email").value,
+        contact: document.getElementById("phone").value
+      },
+      notes: {
+        domain: selectedDomain.value,
+        plan: plan
+      },
+      theme: {
+        color: "#3b82f6" // Brand blue theme matching NextGenZ aesthetics
+      },
+      modal: {
+        ondismiss: function () {
+          setLoading(false);
+          showCustomAlert("⚠️ Payment process cancelled.");
+        }
       }
-    }, 50);
-    
+    };
+
+    const rzp = new Razorpay(options);
+    rzp.open();
+
   } catch (err) {
-    console.error(err);
-    showCustomAlert("⚠️ An error occurred loading the payment portal: " + err.message);
+    console.error("Payment Gateway Error:", err);
+    showCustomAlert("⚠️ Failed to load payment gateway: " + err.message);
+    setLoading(false);
   }
 });
 
@@ -396,109 +449,7 @@ async function uploadScreenshotToServer(file) {
 }
 // --- Payment Screenshot Logic End ---
 
-cancelUpiBtn.addEventListener('click', () => {
-  upiModal.classList.remove('show');
-});
-
-submitUpiBtn.addEventListener('click', async () => {
-  if (submitUpiBtn.disabled) return;
-  
-  const utr = utrInput.value.trim();
-  
-  if (!utr) {
-    showCustomAlert("⚠️ Transaction ID cannot be empty.");
-    return;
-  }
-  if (utr.length < 8) {
-    showCustomAlert("⚠️ Transaction ID is too short.");
-    return;
-  }
-  if (/^[a-zA-Z]+$/.test(utr)) {
-    showCustomAlert("⚠️ Transaction ID cannot contain only letters.");
-    return;
-  }
-  if (/^[^a-zA-Z0-9]+$/.test(utr)) {
-    showCustomAlert("⚠️ Transaction ID cannot contain only symbols.");
-    return;
-  }
-  if (/\s/.test(utr)) {
-    showCustomAlert("⚠️ Transaction ID cannot contain spaces.");
-    return;
-  }
-
-  if (!selectedScreenshot) {
-    showCustomAlert("⚠️ Please upload your payment screenshot before submitting.");
-    return;
-  }
-  
-  submitUpiBtn.disabled = true;
-  const originalBtnText = submitUpiBtn.textContent;
-  submitUpiBtn.textContent = "Processing...";
-  
-  upiModal.classList.remove('show');
-  setLoading(true);
-
-  try {
-    // 1. Upload Resume
-    buttonText.textContent = "Uploading Resume...";
-    const uploadData = await uploadResumeToServer(selectedFile);
-    
-    // 2. Collect form data
-    buttonText.textContent = "Processing Application...";
-    const applicationData = {
-      fullName: document.getElementById("fullName").value,
-      email: document.getElementById("email").value,
-      phone: document.getElementById("phone").value,
-      college: document.getElementById("college").value,
-      course: document.getElementById("course").value,
-      year: document.getElementById("year").value,
-      domain: selectedDomain.value,
-      plan: document.getElementById("selectedPlan").value,
-      resume: {
-        url: uploadData.fileUrl,
-        publicId: uploadData.publicId,
-        fileName: selectedFile.name
-      },
-      linkedin: document.getElementById("linkedin").value,
-      github: document.getElementById("github").value,
-      whyJoin: document.getElementById("whyJoin").value,
-      paymentId: utr,
-      transactionId: utr
-    };
-    
-    // 2.5 Upload Payment Screenshot
-    buttonText.textContent = "Uploading Payment Screenshot...";
-    submitUpiBtn.textContent = "Uploading Screenshot...";
-    const screenshotUploadData = await uploadScreenshotToServer(selectedScreenshot);
-    applicationData.paymentScreenshot = {
-      url: screenshotUploadData.fileUrl,
-      publicId: screenshotUploadData.publicId
-    };
-
-    // 3. Submit directly to backend
-    const submitResponse = await fetch("/api/submit-application", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(applicationData)
-    });
-
-    const submitData = await submitResponse.json();
-    if (!submitResponse.ok) {
-      throw new Error(submitData.error || submitData.message || "Failed to submit application.");
-    }
-    
-    // Hide the UPI modal and show the custom success modal
-    upiModal.classList.remove('show');
-    openModal('successModal');
-
-  } catch (error) {
-    console.error("Error:", error);
-    showCustomAlert(`❌ ${error.message || "Failed to submit application. Please try again."}`);
-    setLoading(false);
-    submitUpiBtn.disabled = false;
-    submitUpiBtn.textContent = "Submit Payment Details";
-  }
-});
+// Manual UPI logic removed in favor of integrated Razorpay checkout
 
 // Helpers
 function setLoading(isLoading) {

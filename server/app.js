@@ -13,6 +13,7 @@ const authRoutes = require('./routes/authRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const exportRoutes = require('./routes/exportRoutes');
 const applicationRoutes = require('./routes/applicationRoutes');
+const paymentRoutes = require('./routes/paymentRoutes');
 const trackRoutes = require('./routes/trackRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
 const statusRoutes = require('./routes/statusRoutes');
@@ -37,7 +38,7 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com", "https://cdn.jsdelivr.net"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com", "https://cdn.jsdelivr.net", "https://checkout.razorpay.com"],
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdnjs.cloudflare.com"],
       fontSrc: ["'self'", "https://fonts.gstatic.com", "data:", "https://cdnjs.cloudflare.com"],
       imgSrc: ["'self'", "data:", "https://res.cloudinary.com", "blob:"],
@@ -153,6 +154,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/admin/analytics', analyticsRoutes);
 app.use('/api/admin', statusRoutes);
 app.use('/api/track', trackRoutes);
+app.use('/api/payment', paymentRoutes);
 app.use('/api', uploadRoutes); // Contains /api/upload-resume
 app.use('/api', applicationRoutes); // For public application routes
 app.use('/api', reviewRoutes); // Public and Admin Review routes

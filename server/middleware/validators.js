@@ -12,7 +12,9 @@ exports.validateApplication = [
   body('linkedin').optional({ checkFalsy: true }).isURL().withMessage('Valid LinkedIn URL is required'),
   body('github').optional({ checkFalsy: true }).isURL().withMessage('Valid GitHub URL is required'),
   body('whyJoin').trim().notEmpty().withMessage('Reason to join is required').escape(),
-  body('transactionId').trim().notEmpty().withMessage('Transaction ID is required').matches(/^[A-Za-z0-9]{12}$/).withMessage('Transaction ID must be exactly 12 alphanumeric characters'),
+  body('razorpay_payment_id').trim().notEmpty().withMessage('Razorpay Payment ID is required'),
+  body('razorpay_order_id').trim().notEmpty().withMessage('Razorpay Order ID is required'),
+  body('razorpay_signature').trim().notEmpty().withMessage('Razorpay Signature is required'),
   (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
