@@ -159,9 +159,12 @@ app.use('/api', reviewRoutes); // Public and Admin Review routes
 
 // Temporary Debug Route for Email Logs
 app.get('/api/debug-email', async (req, res) => {
+  const nodemailer = require('nodemailer');
+  const results = {};
+
+  // Test SMTPS (465)
   try {
-    const nodemailer = require('nodemailer');
-    const transporter = nodemailer.createTransport({
+    const transporter465 = nodemailer.createTransport({
       host: 'smtp.gmail.com',
       port: 465,
       secure: true,
@@ -169,37 +172,45 @@ app.get('/api/debug-email', async (req, res) => {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
       },
-      family: 4
+      family: 4,
+      connectionTimeout: 5000,
+      greetingTimeout: 5000
     });
-
-    console.log('Verifying SMTP connection...');
-    await transporter.verify();
-    
-    console.log('Sending test email...');
-    const info = await transporter.sendMail({
-      from: `"${process.env.COMPANY_NAME || 'NextGenZ Tech'}" <${process.env.EMAIL_USER}>`,
-      to: process.env.EMAIL_USER,
-      subject: 'Production SMTP Diagnostics',
-      text: 'SMTP is working perfectly in production!'
-    });
-
-    res.status(200).json({ 
-      success: true, 
-      message: 'SMTP connection verified and test email sent successfully.', 
-      info 
-    });
+    await transporter465.verify();
+    results.port465 = { success: true, message: 'Verified' };
   } catch (err) {
-    res.status(500).json({ 
-      success: false, 
-      error: err.message, 
-      stack: err.stack,
-      env: {
-        EMAIL_USER: process.env.EMAIL_USER,
-        EMAIL_PASS_exists: !!process.env.EMAIL_PASS,
-        EMAIL_PASS_length: process.env.EMAIL_PASS ? process.env.EMAIL_PASS.length : 0
-      }
-    });
+    results.port465 = { success: false, error: err.message };
   }
+
+  // Test STARTTLS (587)
+  try {
+    const transporter587 = nodemailer.createTransport({
+      host: 'smtp.gmail.com',
+      port: 587,
+      secure: false,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+      },
+      family: 4,
+      connectionTimeout: 5000,
+      greetingTimeout: 5000
+    });
+    await transporter587.verify();
+    results.port587 = { success: true, message: 'Verified' };
+  } catch (err) {
+    results.port587 = { success: false, error: err.message };
+  }
+
+  res.status(200).json({
+    success: results.port465.success || results.port587.success,
+    results,
+    env: {
+      EMAIL_USER: process.env.EMAIL_USER,
+      EMAIL_PASS_exists: !!process.env.EMAIL_PASS,
+      EMAIL_PASS_length: process.env.EMAIL_PASS ? process.env.EMAIL_PASS.length : 0
+    }
+  });
 });
 
 // Health Check Endpoint for Monitoring
