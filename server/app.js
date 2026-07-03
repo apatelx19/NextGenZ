@@ -157,38 +157,6 @@ app.use('/api', uploadRoutes); // Contains /api/upload-resume
 app.use('/api', applicationRoutes); // For public application routes
 app.use('/api', reviewRoutes); // Public and Admin Review routes
 
-// Temporary Debug Route for Email Logs
-app.get('/api/debug-email', async (req, res) => {
-  try {
-    const emailService = require('./services/emailService');
-    const targetEmail = req.query.to || process.env.EMAIL_USER;
-    
-    console.log(`Sending diagnostic email to ${targetEmail}...`);
-    const success = await emailService.sendEmail(
-      targetEmail,
-      'Production Email Diagnostics',
-      '<h3>Testing Email Service Integration</h3><p>If you receive this, the email automation is working perfectly in production!</p>'
-    );
-
-    res.status(200).json({ 
-      success, 
-      method: process.env.SENDGRID_API_KEY ? 'SendGrid' : (process.env.RESEND_API_KEY ? 'Resend' : 'SMTP'),
-      targetEmail,
-      env: {
-        EMAIL_USER: process.env.EMAIL_USER,
-        SENDGRID_API_KEY_exists: !!process.env.SENDGRID_API_KEY,
-        RESEND_API_KEY_exists: !!process.env.RESEND_API_KEY
-      }
-    });
-  } catch (err) {
-    res.status(500).json({ 
-      success: false, 
-      error: err.message, 
-      stack: err.stack
-    });
-  }
-});
-
 // Health Check Endpoint for Monitoring
 app.get('/health', (req, res) => {
   const dbStatus = mongoose.connection.readyState === 1 ? 'connected' : 'disconnected';
