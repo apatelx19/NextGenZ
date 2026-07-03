@@ -157,6 +157,51 @@ app.use('/api', uploadRoutes); // Contains /api/upload-resume
 app.use('/api', applicationRoutes); // For public application routes
 app.use('/api', reviewRoutes); // Public and Admin Review routes
 
+// Temporary Debug Route for Email Logs
+app.get('/api/debug-email', async (req, res) => {
+  try {
+    const nodemailer = require('nodemailer');
+    const transporter = nodemailer.createTransport({
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+      },
+      family: 4
+    });
+
+    console.log('Verifying SMTP connection...');
+    await transporter.verify();
+    
+    console.log('Sending test email...');
+    const info = await transporter.sendMail({
+      from: `"${process.env.COMPANY_NAME || 'NextGenZ Tech'}" <${process.env.EMAIL_USER}>`,
+      to: process.env.EMAIL_USER,
+      subject: 'Production SMTP Diagnostics',
+      text: 'SMTP is working perfectly in production!'
+    });
+
+    res.status(200).json({ 
+      success: true, 
+      message: 'SMTP connection verified and test email sent successfully.', 
+      info 
+    });
+  } catch (err) {
+    res.status(500).json({ 
+      success: false, 
+      error: err.message, 
+      stack: err.stack,
+      env: {
+        EMAIL_USER: process.env.EMAIL_USER,
+        EMAIL_PASS_exists: !!process.env.EMAIL_PASS,
+        EMAIL_PASS_length: process.env.EMAIL_PASS ? process.env.EMAIL_PASS.length : 0
+      }
+    });
+  }
+});
+
 // Health Check Endpoint for Monitoring
 app.get('/health', (req, res) => {
   const dbStatus = mongoose.connection.readyState === 1 ? 'connected' : 'disconnected';
@@ -176,17 +221,6 @@ app.get('/health', (req, res) => {
     platform: process.platform,
     pid: process.pid
   });
-});
-
-// Temporary Test Route for Email SMTP Connection
-app.get('/api/test-email-smtp', async (req, res) => {
-  try {
-    const emailService = require('./services/emailService');
-    const verifyResult = await emailService.transporter.verify();
-    res.status(200).json({ success: true, message: 'SMTP ready', verifyResult });
-  } catch (err) {
-    res.status(500).json({ success: false, message: err.message, stack: err.stack });
-  }
 });
 
 // API 404 Handler
