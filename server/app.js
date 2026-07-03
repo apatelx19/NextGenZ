@@ -159,8 +159,13 @@ app.use('/api', reviewRoutes); // Public and Admin Review routes
 
 // Temporary Debug Route for Email Logs
 app.get('/api/debug-email', async (req, res) => {
+  const dns = require('dns');
   const nodemailer = require('nodemailer');
   const results = {};
+
+  const lookupIPv4 = (hostname, options, callback) => {
+    return dns.lookup(hostname, { family: 4 }, callback);
+  };
 
   // Test SMTPS (465)
   try {
@@ -172,7 +177,7 @@ app.get('/api/debug-email', async (req, res) => {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
       },
-      family: 4,
+      lookup: lookupIPv4,
       connectionTimeout: 5000,
       greetingTimeout: 5000
     });
@@ -192,7 +197,7 @@ app.get('/api/debug-email', async (req, res) => {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
       },
-      family: 4,
+      lookup: lookupIPv4,
       connectionTimeout: 5000,
       greetingTimeout: 5000
     });
