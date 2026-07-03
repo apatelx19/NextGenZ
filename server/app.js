@@ -38,12 +38,12 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com", "https://cdn.jsdelivr.net", "https://checkout.razorpay.com"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com", "https://cdn.jsdelivr.net", "https://checkout.razorpay.com", "https://cdn.razorpay.com"],
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdnjs.cloudflare.com"],
       fontSrc: ["'self'", "https://fonts.gstatic.com", "data:", "https://cdnjs.cloudflare.com"],
-      imgSrc: ["'self'", "data:", "https://res.cloudinary.com", "blob:"],
-      connectSrc: ["'self'", "https://api.razorpay.com", "https://checkout.razorpay.com", "https://api.cloudinary.com"], // added typical connect endpoints for payments/uploads just in case
-      frameSrc: ["'self'", "https://api.razorpay.com", "https://checkout.razorpay.com"]
+      imgSrc: ["'self'", "data:", "https://res.cloudinary.com", "blob:", "https://cdn.razorpay.com"],
+      connectSrc: ["'self'", "https://api.razorpay.com", "https://checkout.razorpay.com", "https://cdn.razorpay.com", "https://api.cloudinary.com"], // added typical connect endpoints for payments/uploads just in case
+      frameSrc: ["'self'", "https://api.razorpay.com", "https://checkout.razorpay.com", "https://cdn.razorpay.com"]
     }
   },
   crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" }, // allows Razorpay popup
