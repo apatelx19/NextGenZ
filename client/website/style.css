@@ -678,7 +678,8 @@ body.bg-dark-active .carousel-btn,
     color: inherit;
     font-family: var(--font-body);
     font-size: 0.95rem;
-    transition: all 0.2s ease;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    transform: translateY(0);
 }
 
 /* Fix autofill overriding backgrounds in dark sections & modals */
@@ -703,12 +704,21 @@ body.bg-dark-active .carousel-btn,
     -webkit-text-fill-color: #272727 !important;
 }
 
+.form input:not([type="checkbox"]):not([type="radio"]):hover,
+.form select:hover,
+.form textarea:hover {
+    border-color: var(--primary);
+    background-color: rgba(255, 77, 0, 0.02);
+}
+
 .form input:not([type="checkbox"]):not([type="radio"]):focus,
 .form select:focus,
 .form textarea:focus {
     outline: none;
     border-color: var(--primary);
-    box-shadow: 4px 4px 0 var(--primary);
+    box-shadow: 6px 6px 0 var(--primary);
+    transform: translateY(-2px);
+    background-color: rgba(255, 77, 0, 0.04);
 }
 
 .form select {
