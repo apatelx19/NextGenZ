@@ -842,64 +842,7 @@
     </div>
   </div>
 
-  <!-- UPI Payment Modal -->
-  <div id="upi-modal" class="modal-overlay">
-    <div class="modal-content" style="max-width: 500px; text-align: center;">
-      <div class="modal-header">
-        <h2>Complete Your Payment</h2>
-      </div>
-      <div class="modal-body">
-        <p style="margin-bottom: 1rem;">Scan the QR code below using Google Pay, PhonePe, or Paytm to pay <strong>₹<span id="upi-amount">299</span></strong>.</p>
-        
-        <!-- Placeholder for QR Code, you can replace the src with your actual QR code image -->
-        <div style="background: white; padding: 1rem; border-radius: 10px; display: inline-block; margin-bottom: 1rem;">
-          <a id="upi-deep-link" href="#" target="_blank" style="display: block;">
-            <div id="upi-qr-container" style="width: 200px; height: 200px; margin: 0 auto; display: flex; justify-content: center; align-items: center;">
-
-            </div>
-          </a>
-        </div>
-        
-        <div style="margin-bottom: 1.5rem;">
-          <a id="upi-mobile-button" href="#" class="btn" style="display: inline-block; background-color: #27ae60; text-decoration: none; padding: 10px 20px; margin-bottom: 10px;">📲 Open UPI App to Pay</a>
-        </div>
-
-        <p style="font-size: 1.1rem; margin-bottom: 0.5rem;">Or pay to UPI ID:</p>
-        <p style="font-size: 1.2rem; font-weight: bold; color: var(--primary-color); margin-bottom: 1.5rem; letter-spacing: 1px;">aryajpatelssk@oksbi</p>
-        
-        <div class="form-group" style="text-align: left; margin-bottom: 1.5rem;">
-          <label for="payment-screenshot" style="font-family: var(--font-mono); font-size: 0.8rem; font-weight: 700; text-transform: uppercase; display: block; margin-bottom: 4px;">Payment Screenshot *</label>
-          <div class="file-upload-container" id="screenshotUploadContainer" style="margin-bottom: 8px;">
-            <input type="file" id="payment-screenshot" name="payment-screenshot" accept=".png,.jpg,.jpeg,.webp" required hidden aria-label="Payment Screenshot">
-            <div class="upload-area" id="screenshotUploadArea" style="padding: 1.5rem; border: 2px dashed var(--border-color); border-radius: 8px; text-align: center; cursor: pointer; background: rgba(0,0,0,0.02); transition: all 0.3s ease;" tabindex="0" aria-label="Upload Payment Screenshot Area">
-                <i class="fas fa-cloud-upload-alt" style="font-size: 2rem; color: var(--primary-color); margin-bottom: 10px;"></i>
-                <p style="margin: 0; font-size: 0.95rem; font-weight: 600;">Click to Upload Screenshot</p>
-                <span style="font-size: 0.8rem; color: var(--text-muted);">PNG, JPG, WEBP • Max 5MB</span>
-            </div>
-            <div class="file-preview" id="screenshotPreviewContainer" style="display: none; padding: 10px; border: 1px solid var(--border-color); border-radius: 8px; background: rgba(0,0,0,0.02); align-items: center; justify-content: space-between;">
-                <div style="display: flex; align-items: center; gap: 10px; overflow: hidden;">
-                  <img id="screenshotPreviewImage" src="" alt="Screenshot Preview" style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px;">
-                  <span id="screenshotFileName" style="font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 250px;">screenshot.png</span>
-                </div>
-                <i class="fas fa-times remove-file" id="removeScreenshotBtn" style="cursor: pointer; color: #ff4757; padding: 5px;" aria-label="Remove Screenshot" tabindex="0"></i>
-            </div>
-          </div>
-          <small style="color: var(--text-muted); display: block; line-height: 1.4;">Upload the payment success screenshot from Google Pay, PhonePe, Paytm or BHIM.</small>
-        </div>
-
-        <div class="form-group" style="text-align: left;">
-          <label for="utr-input" style="font-family: var(--font-mono); font-size: 0.8rem; font-weight: 700; text-transform: uppercase; display: block; margin-bottom: 4px;">Enter 12-Digit UTR / Transaction ID *</label>
-          <input type="text" id="utr-input" placeholder="e.g., 312345678901" required aria-label="UTR Transaction ID" style="width: 100%; padding: 0.8rem; border-radius: 8px; border: 1px solid var(--border-color); background: var(--card-bg); color: var(--text-color);">
-          <small style="color: var(--text-muted); display: block; margin-top: 0.5rem;">You can find this 12-digit number in your payment app's history.</small>
-        </div>
-      </div>
-      
-      <div class="modal-footer" style="justify-content: center; margin-top: 1.5rem;">
-        <button type="button" id="cancel-upi" class="btn" style="background: transparent; color: #333; border: 1px solid var(--text-muted); margin-right: 1rem;">Cancel</button>
-        <button type="button" id="submit-upi-btn" class="btn">Submit Payment Details</button>
-      </div>
-    </div>
-  </div>
+  <!-- Legacy UPI Payment Modal Removed in favor of Razorpay -->
   <!-- Custom Alert Modal -->
   <div id="customAlertModal" class="modal-overlay" style="z-index: 5000;">
     <div class="modal-content" style="max-width: 400px; text-align: center; border-top: 4px solid var(--primary-color);">
@@ -913,6 +856,6 @@
   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
   <!-- Local QR Generator to bypass Adblockers and Network Filters -->
   <script src="qrcode.js"></script>
-  <script src="script.js?v=3"></script>
+  <script src="script.js?v=4"></script>
 </body>
 </html>
