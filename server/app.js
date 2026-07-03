@@ -160,31 +160,30 @@ app.use('/api', reviewRoutes); // Public and Admin Review routes
 // Temporary Debug Route for Email Logs
 app.get('/api/debug-email', async (req, res) => {
   try {
-    const emailService = require('./services/emailService');
+    const axios = require('axios');
     const targetEmail = req.query.to || process.env.EMAIL_USER;
-    
-    console.log(`Sending diagnostic email to ${targetEmail}...`);
-    const success = await emailService.sendEmail(
-      targetEmail,
-      'Production Email Diagnostics',
-      '<h3>Testing Email Service Integration</h3><p>If you receive this, the email automation is working perfectly in production!</p>'
-    );
+    const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
 
-    res.status(200).json({ 
-      success, 
-      method: process.env.RESEND_API_KEY ? 'Resend' : 'SMTP',
-      targetEmail,
-      env: {
-        EMAIL_USER: process.env.EMAIL_USER,
-        RESEND_API_KEY_exists: !!process.env.RESEND_API_KEY,
-        RESEND_FROM_EMAIL: process.env.RESEND_FROM_EMAIL
+    const payload = {
+      from: `"NextGenZ Tech" <${fromEmail}>`,
+      to: [targetEmail],
+      subject: 'Production Resend Diagnostics',
+      html: '<h3>Testing Resend Integration Directly</h3>'
+    };
+
+    const response = await axios.post('https://api.resend.com/emails', payload, {
+      headers: {
+        'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+        'Content-Type': 'application/json'
       }
     });
+
+    res.status(200).json({ success: true, data: response.data });
   } catch (err) {
     res.status(500).json({ 
       success: false, 
       error: err.message, 
-      stack: err.stack
+      details: err.response ? err.response.data : null 
     });
   }
 });
