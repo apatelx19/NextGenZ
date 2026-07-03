@@ -655,6 +655,18 @@ body.bg-dark-active .carousel-btn,
     gap: 24px;
 }
 
+.form-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+}
+
+.form-grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+}
+
 .form input:not([type="checkbox"]):not([type="radio"]),
 .form select,
 .form textarea {
@@ -1406,6 +1418,15 @@ body.bg-dark-active .carousel-btn,
     .bottom-links {
         justify-content: center;
     }
+    
+    /* Responsive form fields */
+    .form-grid-2, .form-grid-3 {
+        grid-template-columns: 1fr !important;
+        gap: 16px !important;
+    }
+    .form-grid-2 *, .form-grid-3 * {
+        grid-column: span 1 !important;
+    }
 }
 
 /* Privacy Modal overlay and modal content */
@@ -1628,6 +1649,15 @@ body.bg-dark-active .modal-content {
     
     .footer-col:first-child {
         grid-column: span 2;
+    }
+    
+    /* Responsive form fields on tablet/mobile */
+    .form-grid-2, .form-grid-3 {
+        grid-template-columns: 1fr !important;
+        gap: 16px !important;
+    }
+    .form-grid-2 *, .form-grid-3 * {
+        grid-column: span 1 !important;
     }
 }
 
