@@ -731,9 +731,17 @@ body.bg-dark-active .carousel-btn,
     background-size: 16px;
 }
 
+.form select {
+    color-scheme: light;
+}
+
 .form select option {
     background-color: var(--paper-light);
     color: var(--ink-light);
+}
+
+.bg-dark .form select {
+    color-scheme: dark;
 }
 
 .bg-dark .form select option {
