@@ -42,32 +42,6 @@ class CertificateService {
   }
 
   /**
-   * Draws an ornate gold corner flourish in PDFKit
-   * @param {Object} doc - PDFDocument instance
-   * @param {number} x - rotation origin x
-   * @param {number} y - rotation origin y
-   * @param {number} rotAngle - rotation angle in degrees
-   */
-  drawGoldCornerFlourish(doc, x, y, rotAngle) {
-    doc.save();
-    doc.translate(x, y);
-    doc.rotate(rotAngle);
-    doc.strokeColor('#C5A059').lineWidth(1.2).opacity(0.85);
-    
-    // Ornate curve scroll path
-    doc.moveTo(0, 0)
-       .lineTo(35, 0)
-       .quadraticCurveTo(20, 5, 20, 20)
-       .quadraticCurveTo(5, 20, 0, 35)
-       .stroke();
-       
-    // Small inner circle
-    doc.fillColor('#C5A059').opacity(0.85);
-    doc.circle(10, 10, 2).fill();
-    doc.restore();
-  }
-
-  /**
    * Draws a vector gold verification seal with ribbon tails
    * @param {Object} doc - PDFDocument instance
    * @param {number} x - center x
@@ -144,62 +118,22 @@ class CertificateService {
         const width = 841.89;
         const height = 595.28;
 
-        const logoPath = path.join(__dirname, '../assets/brand_logo.png');
-        const msmePath = path.join(__dirname, '../assets/msme_logo.png');
+        const templatePath = path.join(__dirname, '../assets/certificate_template.jpg');
         const signaturePath = path.join(__dirname, '../assets/signature.png');
 
-        // 1. Draw solid premium off-white background
-        doc.rect(0, 0, width, height).fill('#FCFBF7');
-
-        // 2. Draw subtle guilloche-like background lines (Watermark texture)
-        doc.save();
-        doc.strokeColor('#C5A059').lineWidth(0.25).opacity(0.04);
-        for (let r = 200; r < 500; r += 20) {
-          doc.circle(width - 50, height - 50, r).stroke();
-        }
-        for (let r = 150; r < 400; r += 20) {
-          doc.circle(50, 50, r).stroke();
-        }
-        doc.restore();
-
-        // 3. Draw dual gold/charcoal borders
-        // Outer dark charcoal border
-        doc.rect(20, 20, width - 40, height - 40)
-           .lineWidth(3.5)
-           .strokeColor('#1A1A1A')
-           .stroke();
-
-        // Inner gold border
-        doc.rect(27, 27, width - 54, height - 54)
-           .lineWidth(1)
-           .strokeColor('#C5A059')
-           .stroke();
-
-        // 4. Draw ornate gold corners
-        const offset = 27;
-        this.drawGoldCornerFlourish(doc, offset, offset, 0);
-        this.drawGoldCornerFlourish(doc, width - offset, offset, 90);
-        this.drawGoldCornerFlourish(doc, width - offset, height - offset, 180);
-        this.drawGoldCornerFlourish(doc, offset, height - offset, 270);
-
-        // 5. Header Section (Logos & Brand names)
-        // Left Company Logo
+        // 1. Draw the high-fidelity premium blank template background
         try {
-          // Render logo centered vertically on header bar
-          doc.image(logoPath, 55, 45, { height: 45 });
+          doc.image(templatePath, 0, 0, { width, height });
         } catch (err) {
-          logger.warn(`Missing brand logo for certificate: ${err.message}`);
+          logger.error(`Failed to load certificate template background: ${err.message}`);
+          // Fallback to vector borders if background fails to load
+          doc.rect(0, 0, width, height).fill('#FCFBF7');
+          doc.rect(20, 20, width - 40, height - 40).lineWidth(3.5).strokeColor('#1A1A1A').stroke();
+          doc.rect(27, 27, width - 54, height - 54).lineWidth(1).strokeColor('#C5A059').stroke();
         }
 
-        // Right MSME Government Seal
-        try {
-          doc.image(msmePath, width - 55 - 90, 42, { height: 50 });
-        } catch (err) {
-          logger.warn(`Missing MSME logo for certificate: ${err.message}`);
-        }
-
-        // 6. Certificate Headers (Serif Typeface)
-        doc.y = 130;
+        // 2. Certificate Headers (Times Serif)
+        doc.y = 150;
         doc.fillColor('#1A1A1A')
            .fontSize(34)
            .font('Times-Bold')
@@ -214,9 +148,9 @@ class CertificateService {
 
         doc.moveDown(0.6);
 
-        // 7. Student Name
+        // 3. Student Name (Charcoal black to match the mockup exactly!)
         const fullNameStr = (applicationData.fullName || 'INTERN NAME').toUpperCase();
-        doc.fillColor('#FF4D00')
+        doc.fillColor('#1A1A1A')
            .fontSize(28)
            .font('Times-Bold')
            .text(fullNameStr, { align: 'center' });
@@ -237,11 +171,11 @@ class CertificateService {
 
         doc.moveDown(1.5);
 
-        // 8. Certificate Description Text (Serif Font)
+        // 4. Certificate Description Text
         const domainStr = applicationData.domain || 'Software Internship';
         const dates = this.getBatchDates(applicationData.internshipBatch);
         
-        doc.y = 310;
+        doc.y = 325;
         const certText = `for outstanding performance and successful completion of the 1-Month Internship Program in the domain of ${domainStr} at NextGenZ Tech from ${dates.start} to ${dates.end}.`;
         
         doc.fillColor('#333333')
@@ -253,8 +187,8 @@ class CertificateService {
              align: 'center'
            });
 
-        // 9. Bottom Footer section
-        const footerY = 460;
+        // 5. Bottom Footer section
+        const footerY = 465;
 
         // --- Left: Issue Date ---
         doc.moveTo(70, footerY + 15)
