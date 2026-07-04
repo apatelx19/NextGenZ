@@ -78,11 +78,11 @@ class CertificateService {
           doc.rect(0, 0, width, height).fill('#FCFBF7');
         }
 
-        // 2. Student Name (Charcoal black, centered at y = 250, size 36 to match mockup exactly)
+        // 2. Student Name (Charcoal black, centered at y = 245, size 38 for a bolder, premium look)
         const fullNameStr = (applicationData.fullName || 'INTERN NAME').toUpperCase();
-        doc.y = 250;
-        doc.fillColor('#222222')
-           .fontSize(36)
+        doc.y = 245;
+        doc.fillColor('#1A1A1A')
+           .fontSize(38)
            .font('Times-Bold')
            .text(fullNameStr, { align: 'center' });
 
@@ -93,10 +93,10 @@ class CertificateService {
         doc.y = 350;
         const certText = `for outstanding performance and successful completion of the 1-month internship program in ${domainStr} at NextGenZ Tech from ${dates.start} to ${dates.end}.`;
         
-        doc.fillColor('#333333')
+        doc.fillColor('#222222')
            .fontSize(14.5)
            .font('Times-Roman')
-           .lineGap(7)
+           .lineGap(8)
            .text(certText, 100, doc.y, {
              width: width - 200,
              align: 'center'
@@ -126,11 +126,11 @@ class CertificateService {
            .font('Times-Roman')
            .text('Issue Date', 80, footerY + 23, { width: 140, align: 'center' });
 
-        // --- Center Column: Verification ID & QR Code (Side-by-Side to match mockup) ---
+        // --- Center Column: Verification ID & QR Code (Side-by-Side) ---
         const certId = `CERT-NGZ-${applicationData.applicationId || '2026-0001'}`;
         const verificationUrl = `https://nextgenztech.online/verify.html?id=${applicationData.applicationId || 'NGZ-2026-0001'}`;
         
-        // Text is on the left
+        // Text on the left
         doc.fillColor('#666666')
            .fontSize(8)
            .font('Times-Roman')
@@ -141,7 +141,7 @@ class CertificateService {
            .font('Times-Bold')
            .text(certId, 280, footerY + 15, { width: 180, align: 'right' });
 
-        // QR Code is on the right
+        // QR Code on the right
         try {
           const qrResponse = await axios.get(
             `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(verificationUrl)}`,
