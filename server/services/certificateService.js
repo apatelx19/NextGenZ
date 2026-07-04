@@ -78,9 +78,9 @@ class CertificateService {
           doc.rect(0, 0, width, height).fill('#FCFBF7');
         }
 
-        // 2. Student Name (Charcoal black, centered at y = 245, size 38)
+        // 2. Student Name (Charcoal black, centered at y = 265, size 38)
         const fullNameStr = (applicationData.fullName || 'INTERN NAME').toUpperCase();
-        doc.y = 245;
+        doc.y = 265;
         doc.fillColor('#1A1A1A')
            .fontSize(38)
            .font('Times-Bold')
@@ -90,7 +90,7 @@ class CertificateService {
         const domainStr = applicationData.domain || 'Software Internship';
         const dates = this.getBatchDates(applicationData.internshipBatch);
         
-        doc.y = 350;
+        doc.y = 360;
         const certText = `for outstanding performance and successful completion of the 1-month internship program in ${domainStr} at NextGenZ Tech from ${dates.start} to ${dates.end}.`;
         
         doc.fillColor('#222222')
@@ -126,43 +126,43 @@ class CertificateService {
            .font('Times-Roman')
            .text('Issue Date', 80, footerY + 23, { width: 140, align: 'center' });
 
-        // --- Center Column: Verification ID & QR Code (Shifted left to avoid gold seal) ---
+        // --- Center Column: Verification ID & QR Code ---
         const certId = `CERT-NGZ-${applicationData.applicationId || '2026-0001'}`;
         const verificationUrl = `https://nextgenztech.online/verify.html?id=${applicationData.applicationId || 'NGZ-2026-0001'}`;
         
-        // Text shifted left to x = 250
+        // Text on the left (Shifted slightly further left to x = 240 to clear the seal area)
         doc.fillColor('#666666')
            .fontSize(8)
            .font('Times-Roman')
-           .text('Certificate verification ID', 250, footerY + 3, { width: 180, align: 'right' });
+           .text('Certificate verification ID', 230, footerY + 3, { width: 180, align: 'right' });
 
         doc.fillColor('#1A1A1A')
            .fontSize(10)
            .font('Times-Bold')
-           .text(certId, 250, footerY + 15, { width: 180, align: 'right' });
+           .text(certId, 230, footerY + 15, { width: 180, align: 'right' });
 
-        // QR Code shifted left to x = 440 (giving 50+ pt gap to gold seal ribbon)
+        // QR Code shifted left to x = 420
         try {
           const qrResponse = await axios.get(
             `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(verificationUrl)}`,
             { responseType: 'arraybuffer', timeout: 5000 }
           );
           const qrBuffer = Buffer.from(qrResponse.data, 'binary');
-          doc.image(qrBuffer, 440, footerY - 12, { height: 55 });
+          doc.image(qrBuffer, 420, footerY - 12, { height: 55 });
         } catch (qrErr) {
           logger.warn(`QR Code generation failed: ${qrErr.message}. Drawing placeholder.`);
-          doc.rect(440, footerY - 12, 55, 55).lineWidth(0.5).strokeColor('#CCCCCC').stroke();
+          doc.rect(420, footerY - 12, 55, 55).lineWidth(0.5).strokeColor('#CCCCCC').stroke();
         }
 
         // --- Right Column: CEO Signature ---
-        doc.moveTo(width - 220, footerY + 15)
-           .lineTo(width - 80, footerY + 15)
+        doc.moveTo(width - 240, footerY + 15)
+           .lineTo(width - 100, footerY + 15)
            .lineWidth(0.8)
            .strokeColor('#DDDDDD')
            .stroke();
 
         try {
-          doc.image(signaturePath, width - 170, footerY - 35, { height: 45 });
+          doc.image(signaturePath, width - 200, footerY - 28, { height: 38 });
         } catch (err) {
           logger.warn(`Missing signature image for certificate: ${err.message}`);
         }
@@ -170,7 +170,7 @@ class CertificateService {
         doc.fillColor('#1A1A1A')
            .fontSize(11)
            .font('Times-Bold')
-           .text('Patel Arya', width - 220, footerY - 5, { width: 140, align: 'center' });
+           .text('Patel Arya', width - 240, footerY - 5, { width: 140, align: 'center' });
 
         doc.fillColor('#666666')
            .fontSize(9)
