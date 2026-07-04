@@ -9,7 +9,7 @@ exports.updateApplicationStatus = async (req, res) => {
     // Assuming req.admin contains the logged in admin details from auth middleware
     const adminName = req.admin ? req.admin.username : 'Admin'; 
 
-    const allowedStatuses = ['Pending Payment Verification', 'Verified', 'Pending', 'Under Review', 'Shortlisted', 'Interview Scheduled', 'Selected', 'Rejected'];
+    const allowedStatuses = ['Pending Payment Verification', 'Verified', 'Pending', 'Under Review', 'Shortlisted', 'Interview Scheduled', 'Selected', 'Rejected', 'Completed'];
     
     if (!allowedStatuses.includes(status)) {
       return res.status(400).json({ success: false, message: 'Invalid status' });

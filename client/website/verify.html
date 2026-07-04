@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Certificate Verification | NextGenZ Tech</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  
+  <!-- Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <style>
+    :root {
+      --primary: #FF4D00;
+      --primary-hover: #e04300;
+      --bg: #050505;
+      --card-bg: rgba(17, 17, 17, 0.7);
+      --border-color: rgba(255, 77, 0, 0.2);
+      --text-color: #ffffff;
+      --text-muted: #888888;
+      --success: #00c853;
+      --danger: #d50000;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg);
+      background-image: 
+        radial-gradient(at 10% 10%, rgba(255, 77, 0, 0.08) 0px, transparent 50%),
+        radial-gradient(at 90% 90%, rgba(255, 77, 0, 0.05) 0px, transparent 50%);
+      color: var(--text-color);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      overflow-x: hidden;
+    }
+
+    /* Container for card */
+    .verification-container {
+      width: 100%;
+      max-width: 580px;
+      margin: auto;
+      perspective: 1000px;
+    }
+
+    /* Glassmorphism Verification Card */
+    .verification-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 40px 30px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+      text-align: center;
+      transform: translateY(20px);
+      opacity: 0;
+      animation: floatIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .verification-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--primary), #ff8700);
+    }
+
+    @keyframes floatIn {
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    /* Logo Styling */
+    .logo-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 30px;
+    }
+
+    .logo-container img {
+      height: 45px;
+      width: auto;
+    }
+
+    .brand-name {
+      font-family: 'Anton', sans-serif;
+      font-size: 2rem;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      background: linear-gradient(135deg, #ffffff 50%, #dddddd 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    /* State Icons */
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      font-size: 2.5rem;
+      margin-bottom: 25px;
+      position: relative;
+    }
+
+    .status-badge.verified {
+      background: rgba(0, 200, 83, 0.1);
+      border: 2px solid var(--success);
+      color: var(--success);
+      box-shadow: 0 0 20px rgba(0, 200, 83, 0.2);
+      animation: pulseSuccess 2s infinite;
+    }
+
+    .status-badge.unverified {
+      background: rgba(213, 0, 0, 0.1);
+      border: 2px solid var(--danger);
+      color: var(--danger);
+      box-shadow: 0 0 20px rgba(213, 0, 0, 0.2);
+    }
+
+    @keyframes pulseSuccess {
+      0% { box-shadow: 0 0 0 0 rgba(0, 200, 83, 0.4); }
+      70% { box-shadow: 0 0 0 15px rgba(0, 200, 83, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(0, 200, 83, 0); }
+    }
+
+    /* Typography inside Card */
+    h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+      letter-spacing: 0.5px;
+    }
+
+    .message {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      line-height: 1.5;
+      margin-bottom: 30px;
+    }
+
+    /* Details Grid */
+    .details-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 30px;
+      text-align: left;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .details-table tr {
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .details-table tr:last-child {
+      border-bottom: none;
+    }
+
+    .details-table td {
+      padding: 14px 18px;
+      font-size: 0.95rem;
+    }
+
+    .details-table td.label {
+      color: var(--text-muted);
+      font-weight: 500;
+      width: 35%;
+    }
+
+    .details-table td.value {
+      color: var(--text-color);
+      font-weight: 600;
+    }
+
+    .value-highlight {
+      color: var(--primary);
+    }
+
+    /* Back Home Button */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      padding: 14px 24px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      border-radius: 10px;
+      border: 1px solid var(--primary);
+      background: transparent;
+      color: #fff;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      font-family: 'Inter', sans-serif;
+    }
+
+    .btn:hover {
+      background: var(--primary);
+      box-shadow: 0 0 15px rgba(255, 77, 0, 0.3);
+      transform: translateY(-2px);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+    }
+
+    /* Loader */
+    .spinner {
+      border: 4px solid rgba(255, 255, 255, 0.1);
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      border-left-color: var(--primary);
+      animation: spin 1s linear infinite;
+      margin: 40px auto;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* Footer text */
+    .verification-footer {
+      margin-top: 30px;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="verification-container">
+    <div class="verification-card" id="cardContainer">
+      <div class="logo-container">
+        <img src="assets/brand_logo.png" alt="NextGenZ Logo" onerror="this.src='https://via.placeholder.com/45/FF4D00/FFFFFF?text=N'">
+        <span class="brand-name">NextGenZ</span>
+      </div>
+
+      <div id="loader">
+        <div class="spinner"></div>
+        <p style="color: var(--text-muted);">Verifying certificate credentials...</p>
+      </div>
+
+      <div id="resultContent" style="display: none;">
+        <!-- Filled Dynamically -->
+      </div>
+
+      <a href="index.html" class="btn" style="margin-top: 10px;">
+        <i class="fas fa-arrow-left"></i> Back to NextGenZ Tech
+      </a>
+    </div>
+
+    <div class="verification-footer">
+      &copy; <span id="year"></span> NextGenZ Tech. Government Registered (MSME) Training Institute.
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    async function verifyCertificate() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const certId = urlParams.get('id');
+
+      const loader = document.getElementById('loader');
+      const resultContent = document.getElementById('resultContent');
+
+      if (!certId) {
+        showError('No Certificate ID provided in URL query.');
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/track/verify/${encodeURIComponent(certId)}`);
+        const data = await response.json();
+
+        loader.style.display = 'none';
+        resultContent.style.display = 'block';
+
+        if (response.ok && data.success && data.verified) {
+          showSuccess(data.application);
+        } else {
+          showError(data.message || 'The certificate ID could not be validated.');
+        }
+      } catch (err) {
+        console.error(err);
+        showError('A server error occurred while verifying the certificate.');
+      }
+    }
+
+    function showSuccess(app) {
+      const resultContent = document.getElementById('resultContent');
+      const verifyDate = new Date(app.verificationDate).toLocaleDateString('en-US', {
+        year: 'numeric', month: 'long', day: 'numeric'
+      });
+
+      resultContent.innerHTML = `
+        <div class="status-badge verified">
+          <i class="fas fa-check"></i>
+        </div>
+        <h1 style="color: var(--success);">VERIFIED GENUINE</h1>
+        <p class="message">This internship completion certificate has been verified as authentic and legally issued by NextGenZ Tech.</p>
+        
+        <table class="details-table">
+          <tr>
+            <td class="label">Intern Name</td>
+            <td class="value">${escapeHtml(app.fullName)}</td>
+          </tr>
+          <tr>
+            <td class="label">Internship Domain</td>
+            <td class="value value-highlight">${escapeHtml(app.domain)}</td>
+          </tr>
+          <tr>
+            <td class="label">Batch</td>
+            <td class="value">${escapeHtml(app.internshipBatch)}</td>
+          </tr>
+          <tr>
+            <td class="label">Certificate ID</td>
+            <td class="value" style="font-family: 'JetBrains Mono', monospace;">CERT-NGZ-${escapeHtml(app.applicationId)}</td>
+          </tr>
+          <tr>
+            <td class="label">Date Verified</td>
+            <td class="value">${verifyDate}</td>
+          </tr>
+        </table>
+      `;
+    }
+
+    function showError(message) {
+      const loader = document.getElementById('loader');
+      const resultContent = document.getElementById('resultContent');
+
+      loader.style.display = 'none';
+      resultContent.style.display = 'block';
+
+      resultContent.innerHTML = `
+        <div class="status-badge unverified">
+          <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        <h1 style="color: var(--danger);">CERTIFICATE UNVERIFIED</h1>
+        <p class="message" style="margin-bottom: 20px;">We were unable to verify this certificate ID. It may be invalid, modified, or pending completion status.</p>
+        <div style="background: rgba(213, 0, 0, 0.05); border: 1px solid rgba(213, 0, 0, 0.15); padding: 15px; border-radius: 8px; font-size: 0.9rem; color: #ff8a80; margin-bottom: 30px; text-align: left; line-height: 1.5;">
+          <strong>Error Details:</strong> ${escapeHtml(message)}
+        </div>
+      `;
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return str
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    // Run verification on page load
+    verifyCertificate();
+  </script>
+</body>
+</html>

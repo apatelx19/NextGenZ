@@ -29,6 +29,7 @@
       <ul class="nav-links">
         <li class="active" data-view="dashboard"><i class="fas fa-chart-pie" style="margin-right: 8px;"></i> Dashboard</li>
         <li data-view="applications"><i class="fas fa-users" style="margin-right: 8px;"></i> Applications</li>
+        <li data-view="completed"><i class="fas fa-certificate" style="margin-right: 8px;"></i> Completed</li>
         <li data-view="reviews"><i class="fas fa-star" style="margin-right: 8px;"></i> Reviews</li>
       </ul>
       <div class="sidebar-footer">
@@ -199,6 +200,7 @@
                   <option value="Shortlisted">Shortlisted</option>
                   <option value="Interview Scheduled">Interview Scheduled</option>
                   <option value="Selected">Selected</option>
+                  <option value="Completed">Completed</option>
                   <option value="Rejected">Rejected</option>
                 </select>
                 <button class="btn primary-btn" id="exportPdfBtn" style="padding: 10px 18px;"><i class="fas fa-file-pdf"></i> Export PDF</button>
@@ -220,6 +222,39 @@
                 </tr>
               </thead>
               <tbody id="tableBody">
+                <!-- JS Populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Completed Table View (Hidden by default) -->
+        <div id="completedView" style="display: none;">
+          <div class="table-container">
+            <div class="table-header">
+              <h3>Completed Internships</h3>
+              <div class="controls">
+                <input type="text" id="completedSearchInput" placeholder="Search name/email..." class="input-group">
+                <select id="completedBatchFilter" class="input-group">
+                  <option value="">All Batches</option>
+                  <option value="July 2026">July 2026</option>
+                  <option value="August 2026">August 2026</option>
+                </select>
+              </div>
+            </div>
+            
+            <table id="completedTable">
+              <thead>
+                <tr>
+                  <th>Date Completed</th>
+                  <th>Name</th>
+                  <th>Domain</th>
+                  <th>Batch</th>
+                  <th>Certificate ID</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="completedTableBody">
                 <!-- JS Populated -->
               </tbody>
             </table>
@@ -295,6 +330,7 @@
           <option value="Shortlisted">Shortlisted</option>
           <option value="Interview Scheduled">Interview Scheduled</option>
           <option value="Selected">Selected</option>
+          <option value="Completed">Completed</option>
           <option value="Rejected">Rejected</option>
         </select>
         <button id="updateStatusBtn" class="btn primary-btn"><i class="fas fa-save"></i> Update Status</button>

@@ -11,8 +11,10 @@ const interviewScheduledTemplate = require('../templates/interviewScheduledTempl
 const selectedTemplate = require('../templates/selectedTemplate');
 const rejectedTemplate = require('../templates/rejectedTemplate');
 const verifiedTemplate = require('../templates/verifiedTemplate');
+const completedTemplate = require('../templates/completedTemplate');
 const adminNotificationTemplate = require('../templates/adminNotificationTemplate');
 const offerLetterService = require('./offerLetterService');
+const certificateService = require('./certificateService');
 
 class EmailService {
   constructor() {
@@ -242,6 +244,20 @@ class EmailService {
       case 'Rejected':
         subject = `Application Update | ${this.companyName}`;
         html = rejectedTemplate(applicationData);
+        break;
+      case 'Completed':
+        subject = `Congratulations! You have Completed your Internship | ${this.companyName}`;
+        html = completedTemplate(applicationData);
+        try {
+          const pdfBuffer = await certificateService.generateCertificate(applicationData);
+          attachments.push({
+            filename: `NextGenZ_Completion_Certificate_${applicationData.fullName.replace(/\s+/g, '_')}.pdf`,
+            content: pdfBuffer,
+            contentType: 'application/pdf'
+          });
+        } catch (error) {
+          console.error('Failed to generate completion certificate PDF:', error);
+        }
         break;
       default:
         return false;

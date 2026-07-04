@@ -52,6 +52,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const navLinks = document.querySelectorAll('.nav-links li');
   const dashboardView = document.getElementById('dashboardView');
   const applicationsView = document.getElementById('applicationsView');
+  const completedView = document.getElementById('completedView');
   const reviewsView = document.getElementById('reviewsView');
 
   navLinks.forEach(link => {
@@ -62,10 +63,15 @@ document.addEventListener('DOMContentLoaded', () => {
       
       dashboardView.style.display = 'none';
       applicationsView.style.display = 'none';
+      completedView.style.display = 'none';
       reviewsView.style.display = 'none';
 
       if(view === 'dashboard') dashboardView.style.display = 'block';
       else if (view === 'applications') applicationsView.style.display = 'block';
+      else if (view === 'completed') {
+        completedView.style.display = 'block';
+        fetchCompleted();
+      }
       else if (view === 'reviews') {
         reviewsView.style.display = 'block';
         fetchReviews();
@@ -304,7 +310,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const amounts = { "Normal": "₹999", "Gold": "₹1,999", "Premium": "₹2,999" };
       const amount = amounts[app.plan] || '-';
 
-      const statuses = ['Pending Payment Verification', 'Verified', 'Rejected', 'Pending', 'Under Review', 'Shortlisted', 'Interview Scheduled', 'Selected'];
+      const statuses = ['Pending Payment Verification', 'Verified', 'Rejected', 'Pending', 'Under Review', 'Shortlisted', 'Interview Scheduled', 'Selected', 'Completed'];
       let optionsHtml = statuses.map(s => `<option value="${s}" ${app.status === s ? 'selected' : ''}>${s}</option>`).join('');
 
       let actionsHtml = `<button class="btn primary-btn view-btn" data-id="${app._id}" style="padding: 5px 10px; font-size: 12px; margin-bottom: 4px;">View Full Details</button><br>`;
@@ -827,5 +833,82 @@ document.addEventListener('DOMContentLoaded', () => {
     await fetch('/api/auth/logout', { method: 'POST', headers });
     window.location.href = '/admin/';
   });
+
+  // --- Completed Tab Logic ---
+  const completedSearchInput = document.getElementById('completedSearchInput');
+  const completedBatchFilter = document.getElementById('completedBatchFilter');
+
+  if (completedSearchInput) {
+    completedSearchInput.addEventListener('input', debounce(() => {
+      fetchCompleted(completedSearchInput.value, completedBatchFilter.value);
+    }, 500));
+  }
+
+  if (completedBatchFilter) {
+    completedBatchFilter.addEventListener('change', () => {
+      fetchCompleted(completedSearchInput.value, completedBatchFilter.value);
+    });
+  }
+
+  async function fetchCompleted(search = '', batch = '') {
+    try {
+      let url = `/api/admin/applications?limit=100&status=Completed`;
+      if (search) url += `&search=${search}`;
+      if (batch) url += `&internshipBatch=${batch}`;
+
+      const res = await fetch(url, { headers });
+      const data = await res.json();
+      
+      if (data.success) {
+        renderCompletedTable(data.applications);
+      } else if (res.status === 401) {
+        window.location.href = '/admin/';
+        return;
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  function renderCompletedTable(apps) {
+    const tbody = document.getElementById('completedTableBody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    
+    apps.forEach(app => {
+      const tr = document.createElement('tr');
+      
+      let dateCompleted = '-';
+      if (app.statusHistory) {
+        const completedLog = app.statusHistory.find(h => h.status === 'Completed');
+        if (completedLog) {
+          dateCompleted = new Date(completedLog.updatedAt).toLocaleDateString();
+        }
+      }
+      if (dateCompleted === '-') {
+        dateCompleted = new Date(app.updatedAt).toLocaleDateString();
+      }
+      
+      const certId = `CERT-NGZ-${app.applicationId || 'N/A'}`;
+
+      tr.innerHTML = sanitizeTableCells(`
+        <td>${dateCompleted}</td>
+        <td>${app.fullName}<br><small>${app.email}</small></td>
+        <td>${app.domain}</td>
+        <td>${app.internshipBatch}</td>
+        <td style="font-family: monospace;">${certId}</td>
+        <td>
+          <button class="btn primary-btn view-completed-btn" data-id="${app._id}" style="padding: 5px 10px; font-size: 12px;">View Details</button>
+        </td>
+      `);
+      tbody.appendChild(tr);
+    });
+
+    document.querySelectorAll('.view-completed-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        openModal(e.target.getAttribute('data-id'));
+      });
+    });
+  }
 
 });

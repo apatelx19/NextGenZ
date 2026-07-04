@@ -27,7 +27,7 @@ const applicationSchema = new mongoose.Schema({
   applicationId: { type: String, unique: true, index: true }, // e.g. NGZ-2026-0001
   status: { 
     type: String, 
-    enum: ["Pending Payment Verification", "Pending Payment", "Pending", "Under Review", "Shortlisted", "Interview Scheduled", "Selected", "Rejected", "Verified"],
+    enum: ["Pending Payment Verification", "Pending Payment", "Pending", "Under Review", "Shortlisted", "Interview Scheduled", "Selected", "Rejected", "Verified", "Completed"],
     default: "Pending Payment Verification",
     index: true
   },
