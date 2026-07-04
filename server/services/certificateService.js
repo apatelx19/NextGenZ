@@ -119,7 +119,7 @@ class CertificateService {
         doc.fillColor('#1A1A1A')
            .fontSize(11)
            .font('Times-Bold')
-           .text(issueDateStr, 80, footerY - 5, { width: 140, align: 'center' });
+           .text(issueDateStr, 80, footerY, { width: 140, align: 'center' });
 
         doc.fillColor('#666666')
            .fontSize(9)
@@ -162,7 +162,7 @@ class CertificateService {
            .stroke();
 
         try {
-          doc.image(signaturePath, width - 200, footerY - 28, { height: 38 });
+          doc.image(signaturePath, width - 200, footerY - 53, { height: 38 });
         } catch (err) {
           logger.warn(`Missing signature image for certificate: ${err.message}`);
         }
@@ -170,7 +170,7 @@ class CertificateService {
         doc.fillColor('#1A1A1A')
            .fontSize(11)
            .font('Times-Bold')
-           .text('Patel Arya', width - 240, footerY - 5, { width: 140, align: 'center' });
+           .text('Patel Arya', width - 240, footerY, { width: 140, align: 'center' });
 
         doc.fillColor('#666666')
            .fontSize(9)
