@@ -155,14 +155,14 @@ class CertificateService {
         }
 
         // --- Right Column: CEO Signature ---
-        doc.moveTo(width - 240, footerY + 15)
-           .lineTo(width - 100, footerY + 15)
+        doc.moveTo(width - 200, footerY + 15)
+           .lineTo(width - 80, footerY + 15)
            .lineWidth(0.8)
            .strokeColor('#DDDDDD')
            .stroke();
 
         try {
-          doc.image(signaturePath, width - 200, footerY - 53, { height: 38 });
+          doc.image(signaturePath, width - 175, footerY - 53, { height: 38 });
         } catch (err) {
           logger.warn(`Missing signature image for certificate: ${err.message}`);
         }
@@ -170,12 +170,12 @@ class CertificateService {
         doc.fillColor('#1A1A1A')
            .fontSize(11)
            .font('Times-Bold')
-           .text('Patel Arya', width - 240, footerY, { width: 140, align: 'center' });
+           .text('Patel Arya', width - 200, footerY, { width: 120, align: 'center' });
 
         doc.fillColor('#666666')
            .fontSize(9)
            .font('Times-Roman')
-           .text('CEO & Founder', width - 220, footerY + 23, { width: 140, align: 'center' });
+           .text('CEO & Founder', width - 200, footerY + 23, { width: 120, align: 'center' });
 
         doc.end();
       } catch (error) {
