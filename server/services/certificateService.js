@@ -42,6 +42,84 @@ class CertificateService {
   }
 
   /**
+   * Draws an ornate gold corner flourish in PDFKit
+   * @param {Object} doc - PDFDocument instance
+   * @param {number} x - rotation origin x
+   * @param {number} y - rotation origin y
+   * @param {number} rotAngle - rotation angle in degrees
+   */
+  drawGoldCornerFlourish(doc, x, y, rotAngle) {
+    doc.save();
+    doc.translate(x, y);
+    doc.rotate(rotAngle);
+    doc.strokeColor('#C5A059').lineWidth(1.2).opacity(0.85);
+    
+    // Ornate curve scroll path
+    doc.moveTo(0, 0)
+       .lineTo(35, 0)
+       .quadraticCurveTo(20, 5, 20, 20)
+       .quadraticCurveTo(5, 20, 0, 35)
+       .stroke();
+       
+    // Small inner circle
+    doc.fillColor('#C5A059').opacity(0.85);
+    doc.circle(10, 10, 2).fill();
+    doc.restore();
+  }
+
+  /**
+   * Draws a vector gold verification seal with ribbon tails
+   * @param {Object} doc - PDFDocument instance
+   * @param {number} x - center x
+   * @param {number} y - center y
+   * @param {number} radius - inner circle radius
+   */
+  drawGoldSeal(doc, x, y, radius) {
+    doc.save();
+    
+    // 1. Draw ribbon tails (behind seal)
+    doc.fillColor('#B8860B'); // Dark gold
+    
+    // Left ribbon
+    doc.moveTo(x - 10, y + 10)
+       .lineTo(x - 22, y + 45)
+       .lineTo(x - 10, y + 38)
+       .lineTo(x - 2, y + 45)
+       .lineTo(x - 4, y + 10)
+       .closePath()
+       .fill();
+       
+    // Right ribbon
+    doc.moveTo(x + 4, y + 10)
+       .lineTo(x + 2, y + 45)
+       .lineTo(x + 10, y + 38)
+       .lineTo(x + 22, y + 45)
+       .lineTo(x + 10, y + 10)
+       .closePath()
+       .fill();
+       
+    // 2. Draw outer scalloped circular border
+    doc.fillColor('#D4AF37'); // Shiny gold
+    doc.circle(x, y, radius + 3).fill();
+    
+    // 3. Draw inner shiny gold circle
+    doc.fillColor('#FFDF00'); // Light shiny gold
+    doc.circle(x, y, radius).fill();
+    
+    // 4. Draw thin dark gold ring
+    doc.strokeColor('#B8860B').lineWidth(0.8);
+    doc.circle(x, y, radius - 3).stroke();
+    
+    // 5. Draw "NGZ" text in center
+    doc.fillColor('#8B6508') // Bronze text
+       .font('Times-Bold')
+       .fontSize(9)
+       .text('NGZ', x - 15, y - 4, { width: 30, align: 'center' });
+       
+    doc.restore();
+  }
+
+  /**
    * Generates a landscape A4 Completion Certificate PDF and returns it as a Buffer
    * @param {Object} applicationData - The application details
    * @returns {Promise<Buffer>}
@@ -75,7 +153,7 @@ class CertificateService {
 
         // 2. Draw subtle guilloche-like background lines (Watermark texture)
         doc.save();
-        doc.strokeColor('#FF4D00').lineWidth(0.3).opacity(0.04);
+        doc.strokeColor('#C5A059').lineWidth(0.25).opacity(0.04);
         for (let r = 200; r < 500; r += 20) {
           doc.circle(width - 50, height - 50, r).stroke();
         }
@@ -84,37 +162,30 @@ class CertificateService {
         }
         doc.restore();
 
-        // 3. Draw dual border
-        // Outer dark grey border
+        // 3. Draw dual gold/charcoal borders
+        // Outer dark charcoal border
         doc.rect(20, 20, width - 40, height - 40)
-           .lineWidth(4)
+           .lineWidth(3.5)
            .strokeColor('#1A1A1A')
            .stroke();
 
-        // Inner orange brand border
-        doc.rect(28, 28, width - 56, height - 56)
-           .lineWidth(1.5)
-           .strokeColor('#FF4D00')
+        // Inner gold border
+        doc.rect(27, 27, width - 54, height - 54)
+           .lineWidth(1)
+           .strokeColor('#C5A059')
            .stroke();
 
-        // 4. Draw elegant decorative corner lines (mimicking the gold scroll corners)
-        doc.save();
-        doc.strokeColor('#FF4D00').lineWidth(1).opacity(0.8);
-        const bracketSize = 30;
-        const offset = 38;
-        // Top-left
-        doc.moveTo(offset, offset + bracketSize).lineTo(offset, offset).lineTo(offset + bracketSize, offset).stroke();
-        // Top-right
-        doc.moveTo(width - offset, offset + bracketSize).lineTo(width - offset, offset).lineTo(width - offset - bracketSize, offset).stroke();
-        // Bottom-left
-        doc.moveTo(offset, height - offset - bracketSize).lineTo(offset, height - offset).lineTo(offset + bracketSize, height - offset).stroke();
-        // Bottom-right
-        doc.moveTo(width - offset, height - offset - bracketSize).lineTo(width - offset, height - offset).lineTo(width - offset - bracketSize, height - offset).stroke();
-        doc.restore();
+        // 4. Draw ornate gold corners
+        const offset = 27;
+        this.drawGoldCornerFlourish(doc, offset, offset, 0);
+        this.drawGoldCornerFlourish(doc, width - offset, offset, 90);
+        this.drawGoldCornerFlourish(doc, width - offset, height - offset, 180);
+        this.drawGoldCornerFlourish(doc, offset, height - offset, 270);
 
         // 5. Header Section (Logos & Brand names)
         // Left Company Logo
         try {
+          // Render logo centered vertically on header bar
           doc.image(logoPath, 55, 45, { height: 45 });
         } catch (err) {
           logger.warn(`Missing brand logo for certificate: ${err.message}`);
@@ -127,18 +198,18 @@ class CertificateService {
           logger.warn(`Missing MSME logo for certificate: ${err.message}`);
         }
 
-        // 6. Certificate Headers
+        // 6. Certificate Headers (Serif Typeface)
         doc.y = 130;
         doc.fillColor('#1A1A1A')
-           .fontSize(38)
-           .font('Helvetica-Bold')
+           .fontSize(34)
+           .font('Times-Bold')
            .text('CERTIFICATE OF COMPLETION', { align: 'center' });
 
         doc.moveDown(0.4);
 
         doc.fillColor('#555555')
-           .fontSize(14)
-           .font('Helvetica-Oblique')
+           .fontSize(15)
+           .font('Times-Italic')
            .text('This is proudly presented to', { align: 'center' });
 
         doc.moveDown(0.6);
@@ -147,29 +218,35 @@ class CertificateService {
         const fullNameStr = (applicationData.fullName || 'INTERN NAME').toUpperCase();
         doc.fillColor('#FF4D00')
            .fontSize(28)
-           .font('Helvetica-Bold')
+           .font('Times-Bold')
            .text(fullNameStr, { align: 'center' });
 
-        // Centered line under name
+        // Double gold line under name
         const lineY = doc.y + 8;
         doc.moveTo((width - 320) / 2, lineY)
            .lineTo((width + 320) / 2, lineY)
            .lineWidth(1)
-           .strokeColor('#FF4D00')
+           .strokeColor('#C5A059')
+           .stroke();
+
+        doc.moveTo((width - 280) / 2, lineY + 3)
+           .lineTo((width + 280) / 2, lineY + 3)
+           .lineWidth(0.5)
+           .strokeColor('#C5A059')
            .stroke();
 
         doc.moveDown(1.5);
 
-        // 8. Certificate Description Text
+        // 8. Certificate Description Text (Serif Font)
         const domainStr = applicationData.domain || 'Software Internship';
         const dates = this.getBatchDates(applicationData.internshipBatch);
         
         doc.y = 310;
         const certText = `for outstanding performance and successful completion of the 1-Month Internship Program in the domain of ${domainStr} at NextGenZ Tech from ${dates.start} to ${dates.end}.`;
         
-        doc.fillColor('#444444')
+        doc.fillColor('#333333')
            .fontSize(14)
-           .font('Helvetica')
+           .font('Times-Roman')
            .lineGap(6)
            .text(certText, 80, doc.y, {
              width: width - 160,
@@ -192,12 +269,12 @@ class CertificateService {
 
         doc.fillColor('#1A1A1A')
            .fontSize(11)
-           .font('Helvetica-Bold')
+           .font('Times-Bold')
            .text(issueDateStr, 70, footerY - 5, { width: 140, align: 'center' });
 
         doc.fillColor('#666666')
            .fontSize(9)
-           .font('Helvetica')
+           .font('Times-Roman')
            .text('Date of Issue', 70, footerY + 23, { width: 140, align: 'center' });
 
         // --- Center: Verification ID & QR Code ---
@@ -220,15 +297,18 @@ class CertificateService {
 
         doc.fillColor('#1A1A1A')
            .fontSize(10)
-           .font('Helvetica-Bold')
+           .font('Times-Bold')
            .text(certId, (width - 200) / 2, footerY + 45, { width: 200, align: 'center' });
 
         doc.fillColor('#666666')
            .fontSize(8)
-           .font('Helvetica')
+           .font('Times-Roman')
            .text('Verification Code', (width - 200) / 2, footerY + 58, { width: 200, align: 'center' });
 
-        // --- Right: CEO Signature ---
+        // --- Right: CEO Signature & Gold Seal ---
+        // Vector gold seal placed next to signature
+        this.drawGoldSeal(doc, width - 260, footerY + 10, 20);
+
         doc.moveTo(width - 210, footerY + 15)
            .lineTo(width - 70, footerY + 15)
            .lineWidth(0.8)
@@ -243,12 +323,12 @@ class CertificateService {
 
         doc.fillColor('#1A1A1A')
            .fontSize(11)
-           .font('Helvetica-Bold')
+           .font('Times-Bold')
            .text('Patel Arya', width - 210, footerY - 5, { width: 140, align: 'center' });
 
         doc.fillColor('#666666')
            .fontSize(9)
-           .font('Helvetica')
+           .font('Times-Roman')
            .text('CEO & Founder', width - 210, footerY + 23, { width: 140, align: 'center' });
 
         doc.end();
