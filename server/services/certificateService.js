@@ -78,7 +78,7 @@ class CertificateService {
           doc.rect(0, 0, width, height).fill('#FCFBF7');
         }
 
-        // 2. Student Name (Charcoal black, centered at y = 245, size 38 for a bolder, premium look)
+        // 2. Student Name (Charcoal black, centered at y = 245, size 38)
         const fullNameStr = (applicationData.fullName || 'INTERN NAME').toUpperCase();
         doc.y = 245;
         doc.fillColor('#1A1A1A')
@@ -126,32 +126,32 @@ class CertificateService {
            .font('Times-Roman')
            .text('Issue Date', 80, footerY + 23, { width: 140, align: 'center' });
 
-        // --- Center Column: Verification ID & QR Code (Side-by-Side) ---
+        // --- Center Column: Verification ID & QR Code (Shifted left to avoid gold seal) ---
         const certId = `CERT-NGZ-${applicationData.applicationId || '2026-0001'}`;
         const verificationUrl = `https://nextgenztech.online/verify.html?id=${applicationData.applicationId || 'NGZ-2026-0001'}`;
         
-        // Text on the left
+        // Text shifted left to x = 250
         doc.fillColor('#666666')
            .fontSize(8)
            .font('Times-Roman')
-           .text('Certificate verification ID', 280, footerY + 3, { width: 180, align: 'right' });
+           .text('Certificate verification ID', 250, footerY + 3, { width: 180, align: 'right' });
 
         doc.fillColor('#1A1A1A')
            .fontSize(10)
            .font('Times-Bold')
-           .text(certId, 280, footerY + 15, { width: 180, align: 'right' });
+           .text(certId, 250, footerY + 15, { width: 180, align: 'right' });
 
-        // QR Code on the right
+        // QR Code shifted left to x = 440 (giving 50+ pt gap to gold seal ribbon)
         try {
           const qrResponse = await axios.get(
             `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(verificationUrl)}`,
             { responseType: 'arraybuffer', timeout: 5000 }
           );
           const qrBuffer = Buffer.from(qrResponse.data, 'binary');
-          doc.image(qrBuffer, 470, footerY - 12, { height: 55 });
+          doc.image(qrBuffer, 440, footerY - 12, { height: 55 });
         } catch (qrErr) {
           logger.warn(`QR Code generation failed: ${qrErr.message}. Drawing placeholder.`);
-          doc.rect(470, footerY - 12, 55, 55).lineWidth(0.5).strokeColor('#CCCCCC').stroke();
+          doc.rect(440, footerY - 12, 55, 55).lineWidth(0.5).strokeColor('#CCCCCC').stroke();
         }
 
         // --- Right Column: CEO Signature ---
