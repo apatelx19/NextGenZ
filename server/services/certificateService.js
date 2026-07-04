@@ -78,34 +78,34 @@ class CertificateService {
           doc.rect(0, 0, width, height).fill('#FCFBF7');
         }
 
-        // 2. Student Name (Charcoal black, centered at y = 245 to match mockup exactly)
+        // 2. Student Name (Charcoal black, centered at y = 250, size 36 to match mockup exactly)
         const fullNameStr = (applicationData.fullName || 'INTERN NAME').toUpperCase();
-        doc.y = 245;
-        doc.fillColor('#1A1A1A')
-           .fontSize(30)
+        doc.y = 250;
+        doc.fillColor('#222222')
+           .fontSize(36)
            .font('Times-Bold')
            .text(fullNameStr, { align: 'center' });
 
-        // 3. Certificate Description Text (Serif Times-Roman, matching mockup spacing)
+        // 3. Certificate Description Text (Serif Times-Roman, matching mockup spacing & casing)
         const domainStr = applicationData.domain || 'Software Internship';
         const dates = this.getBatchDates(applicationData.internshipBatch);
         
-        doc.y = 310;
+        doc.y = 350;
         const certText = `for outstanding performance and successful completion of the 1-month internship program in ${domainStr} at NextGenZ Tech from ${dates.start} to ${dates.end}.`;
         
         doc.fillColor('#333333')
-           .fontSize(14)
+           .fontSize(14.5)
            .font('Times-Roman')
-           .lineGap(6)
-           .text(certText, 80, doc.y, {
-             width: width - 160,
+           .lineGap(7)
+           .text(certText, 100, doc.y, {
+             width: width - 200,
              align: 'center'
            });
 
         // 4. Bottom Footer section
-        const footerY = 460;
+        const footerY = 465;
 
-        // --- Left: Issue Date ---
+        // --- Left Column: Issue Date ---
         doc.moveTo(80, footerY + 15)
            .lineTo(220, footerY + 15)
            .lineWidth(0.8)
@@ -126,35 +126,35 @@ class CertificateService {
            .font('Times-Roman')
            .text('Issue Date', 80, footerY + 23, { width: 140, align: 'center' });
 
-        // --- Center: Verification ID & QR Code ---
+        // --- Center Column: Verification ID & QR Code (Side-by-Side to match mockup) ---
         const certId = `CERT-NGZ-${applicationData.applicationId || '2026-0001'}`;
         const verificationUrl = `https://nextgenztech.online/verify.html?id=${applicationData.applicationId || 'NGZ-2026-0001'}`;
         
-        // Fetch and embed QR Code
-        try {
-          const qrResponse = await axios.get(
-            `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(verificationUrl)}`,
-            { responseType: 'arraybuffer', timeout: 5000 }
-          );
-          const qrBuffer = Buffer.from(qrResponse.data, 'binary');
-          doc.image(qrBuffer, (width - 70) / 2, footerY - 35, { height: 70 });
-        } catch (qrErr) {
-          logger.warn(`QR Code generation failed: ${qrErr.message}. Embedding text instead.`);
-          doc.rect((width - 70) / 2, footerY - 35, 70, 70).lineWidth(0.5).strokeColor('#CCCCCC').stroke();
-          doc.fillColor('#999999').fontSize(7).text('Scan to Verify', (width - 70) / 2, footerY - 5, { width: 70, align: 'center' });
-        }
+        // Text is on the left
+        doc.fillColor('#666666')
+           .fontSize(8)
+           .font('Times-Roman')
+           .text('Certificate verification ID', 280, footerY + 3, { width: 180, align: 'right' });
 
         doc.fillColor('#1A1A1A')
            .fontSize(10)
            .font('Times-Bold')
-           .text(certId, (width - 200) / 2, footerY + 45, { width: 200, align: 'center' });
+           .text(certId, 280, footerY + 15, { width: 180, align: 'right' });
 
-        doc.fillColor('#666666')
-           .fontSize(8)
-           .font('Times-Roman')
-           .text('Certificate verification ID', (width - 200) / 2, footerY + 58, { width: 200, align: 'center' });
+        // QR Code is on the right
+        try {
+          const qrResponse = await axios.get(
+            `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(verificationUrl)}`,
+            { responseType: 'arraybuffer', timeout: 5000 }
+          );
+          const qrBuffer = Buffer.from(qrResponse.data, 'binary');
+          doc.image(qrBuffer, 470, footerY - 12, { height: 55 });
+        } catch (qrErr) {
+          logger.warn(`QR Code generation failed: ${qrErr.message}. Drawing placeholder.`);
+          doc.rect(470, footerY - 12, 55, 55).lineWidth(0.5).strokeColor('#CCCCCC').stroke();
+        }
 
-        // --- Right: CEO Signature & Details ---
+        // --- Right Column: CEO Signature ---
         doc.moveTo(width - 220, footerY + 15)
            .lineTo(width - 80, footerY + 15)
            .lineWidth(0.8)
@@ -162,7 +162,7 @@ class CertificateService {
            .stroke();
 
         try {
-          doc.image(signaturePath, width - 180, footerY - 35, { height: 45 });
+          doc.image(signaturePath, width - 170, footerY - 35, { height: 45 });
         } catch (err) {
           logger.warn(`Missing signature image for certificate: ${err.message}`);
         }
