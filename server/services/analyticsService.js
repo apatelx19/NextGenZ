@@ -87,11 +87,11 @@ class AnalyticsService {
               $sum: {
                 $switch: {
                   branches: [
-                    { case: { $eq: ['$plan', 'Normal'] },  then: 999  },
-                    { case: { $eq: ['$plan', 'Gold'] },    then: 1999 },
-                    { case: { $eq: ['$plan', 'Premium'] }, then: 2999 }
+                    { case: { $eq: ['$plan', 'Normal'] },  then: 499  },
+                    { case: { $eq: ['$plan', 'Gold'] },    then: 999  },
+                    { case: { $eq: ['$plan', 'Premium'] }, then: 1999 }
                   ],
-                  default: 999
+                  default: 499
                 }
               }
             }
@@ -159,11 +159,11 @@ class AnalyticsService {
             $sum: {
               $switch: {
                 branches: [
-                  { case: { $eq: ['$plan', 'Normal'] },  then: 999  },
-                  { case: { $eq: ['$plan', 'Gold'] },    then: 1999 },
-                  { case: { $eq: ['$plan', 'Premium'] }, then: 2999 }
+                  { case: { $eq: ['$plan', 'Normal'] },  then: 499  },
+                  { case: { $eq: ['$plan', 'Gold'] },    then: 999  },
+                  { case: { $eq: ['$plan', 'Premium'] }, then: 1999 }
                 ],
-                default: 999
+                default: 499
               }
             }
           }

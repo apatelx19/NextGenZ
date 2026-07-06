@@ -307,7 +307,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const tr = document.createElement('tr');
       const date = new Date(app.createdAt).toLocaleDateString();
       
-      const amounts = { "Normal": "₹999", "Gold": "₹1,999", "Premium": "₹2,999" };
+      const amounts = { "Normal": "₹499", "Gold": "₹999", "Premium": "₹1,999" };
       const amount = amounts[app.plan] || '-';
 
       const statuses = ['Pending Payment Verification', 'Verified', 'Rejected', 'Pending', 'Under Review', 'Shortlisted', 'Interview Scheduled', 'Selected', 'Completed'];
