@@ -959,31 +959,8 @@ async function initFoundationSeats() {
         freeBadge.style.background = "#e67e22";
       }
     } else {
-      foundationBanner.style.display = "block";
-      freePlanCard.style.display = "block";
-      
-      // Update Banner progress as full / Sold Out
-      if (foundationProgressBar) {
-        foundationProgressBar.style.width = "100%";
-        foundationProgressBar.style.background = "#e74c3c";
-      }
-      if (foundationBannerCounter) {
-        foundationBannerCounter.textContent = `All 30 Seats Claimed (Sold Out)`;
-      }
-      
-      // Update Card
-      if (seatsLeftCounter) {
-        seatsLeftCounter.textContent = "SOLD OUT";
-        seatsLeftCounter.style.color = "#e74c3c";
-      }
-      freePlanCard.classList.add("sold-out");
-      
-      const freeBadge = document.getElementById("freeBadge");
-      if (freeBadge) {
-        freeBadge.style.display = "inline-block";
-        freeBadge.textContent = "SOLD OUT";
-        freeBadge.style.background = "#e74c3c";
-      }
+      foundationBanner.style.display = "none";
+      freePlanCard.style.display = "none";
 
       // If active plan is currently set to Free, reset it to Gold
       const selectedPlan = document.getElementById("selectedPlan");
