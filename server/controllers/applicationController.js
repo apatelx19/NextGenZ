@@ -62,9 +62,20 @@ exports.submitDirectApplication = async (req, res, next) => {
     applicationData.verifiedBy = plan === 'Free' ? 'System (Free Plan)' : 'Razorpay';
     applicationData.verificationDate = Date.now();
     
-    const count = await Application.countDocuments();
+    // Find the latest application by sorting to get the highest serial number
+    const latestApp = await Application.findOne({}, { applicationId: 1 })
+      .sort({ createdAt: -1 })
+      .exec();
+    
+    let nextNum = 1;
+    if (latestApp && latestApp.applicationId) {
+      const match = latestApp.applicationId.match(/NGZ-\d+-(\d+)/);
+      if (match) {
+        nextNum = parseInt(match[1], 10) + 1;
+      }
+    }
     const currentYear = new Date().getFullYear();
-    const paddedCount = String(count + 1).padStart(4, '0');
+    const paddedCount = String(nextNum).padStart(4, '0');
     applicationData.applicationId = `NGZ-${currentYear}-${paddedCount}`;
     
     const newApplication = new Application(applicationData);
