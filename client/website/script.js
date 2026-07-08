@@ -401,8 +401,14 @@ form.addEventListener("submit", async (e) => {
     rzp.open();
 
   } catch (err) {
-    console.error("Payment Gateway Error:", err);
-    showCustomAlert("⚠️ Failed to load payment gateway: " + err.message);
+    console.error("Submission Error:", err);
+    const planEl = document.getElementById("selectedPlan");
+    const plan = planEl ? planEl.value : "Gold";
+    if (plan === 'Free') {
+      showCustomAlert("⚠️ Application Submission Failed: " + err.message);
+    } else {
+      showCustomAlert("⚠️ Failed to load payment gateway: " + err.message);
+    }
     setLoading(false);
   }
 });
