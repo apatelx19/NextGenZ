@@ -8,7 +8,7 @@ const applicationSchema = new mongoose.Schema({
   course: { type: String, required: true },
   year: { type: String, required: true },
   domain: { type: String, required: true, index: true },
-  plan: { type: String, enum: ["Normal", "Gold", "Premium"], required: true },
+  plan: { type: String, enum: ["Normal", "Gold", "Premium", "Free"], required: true },
   resume: {
     url: { type: String, required: true },
     publicId: { type: String, required: true },

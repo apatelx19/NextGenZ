@@ -12,9 +12,9 @@ exports.validateApplication = [
   body('linkedin').optional({ checkFalsy: true }).isURL().withMessage('Valid LinkedIn URL is required'),
   body('github').optional({ checkFalsy: true }).isURL().withMessage('Valid GitHub URL is required'),
   body('whyJoin').trim().notEmpty().withMessage('Reason to join is required').escape(),
-  body('razorpay_payment_id').trim().notEmpty().withMessage('Razorpay Payment ID is required'),
-  body('razorpay_order_id').trim().notEmpty().withMessage('Razorpay Order ID is required'),
-  body('razorpay_signature').trim().notEmpty().withMessage('Razorpay Signature is required'),
+  body('razorpay_payment_id').if(body('plan').ne('Free')).trim().notEmpty().withMessage('Razorpay Payment ID is required'),
+  body('razorpay_order_id').if(body('plan').ne('Free')).trim().notEmpty().withMessage('Razorpay Order ID is required'),
+  body('razorpay_signature').if(body('plan').ne('Free')).trim().notEmpty().withMessage('Razorpay Signature is required'),
   (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {

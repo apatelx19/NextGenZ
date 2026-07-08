@@ -9,6 +9,7 @@ exports.submitDirectApplication = async (req, res, next) => {
     const { 
       email, 
       phone, 
+      plan,
       razorpay_payment_id, 
       razorpay_order_id, 
       razorpay_signature 
@@ -17,34 +18,48 @@ exports.submitDirectApplication = async (req, res, next) => {
     const safeEmail = email ? String(email) : undefined;
     const safePhone = phone ? String(phone) : undefined;
 
-    // Check if this payment ID has already been used to prevent duplicate applications
-    const existingPayment = await Application.findOne({ paymentId: razorpay_payment_id });
-    if (existingPayment) {
-      return res.status(400).json({ error: 'This payment has already been used for an application.' });
-    }
+    // Handle Free Foundation Batch plan
+    if (plan === 'Free') {
+      const freeSeatsCount = await Application.countDocuments({ plan: 'Free', status: { $ne: 'Rejected' } });
+      if (freeSeatsCount >= 30) {
+        return res.status(400).json({ error: 'Sorry! All 30 free seats for the Foundation Batch have already been claimed.' });
+      }
 
-    // Verify the Razorpay payment signature
-    if (!process.env.RAZORPAY_KEY_SECRET) {
-      return res.status(500).json({ error: 'Payment gateway configuration error.' });
-    }
-    const body = razorpay_order_id + "|" + razorpay_payment_id;
-    const expectedSignature = crypto
-      .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
-      .update(body.toString())
-      .digest('hex');
-      
-    if (expectedSignature !== razorpay_signature) {
-      return res.status(400).json({ error: 'Payment signature verification failed. Please contact support.' });
+      // Populate dummy payment details for free plan
+      const uniqueId = crypto.randomBytes(6).toString('hex').toUpperCase();
+      req.body.razorpay_payment_id = `FREE-${uniqueId}`;
+      req.body.razorpay_order_id = 'FREE_ORDER';
+      req.body.razorpay_signature = 'FREE_SIGNATURE';
+    } else {
+      // Check if this payment ID has already been used to prevent duplicate applications
+      const existingPayment = await Application.findOne({ paymentId: razorpay_payment_id });
+      if (existingPayment) {
+        return res.status(400).json({ error: 'This payment has already been used for an application.' });
+      }
+
+      // Verify the Razorpay payment signature
+      if (!process.env.RAZORPAY_KEY_SECRET) {
+        return res.status(500).json({ error: 'Payment gateway configuration error.' });
+      }
+      const body = razorpay_order_id + "|" + razorpay_payment_id;
+      const expectedSignature = crypto
+        .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
+        .update(body.toString())
+        .digest('hex');
+        
+      if (expectedSignature !== razorpay_signature) {
+        return res.status(400).json({ error: 'Payment signature verification failed. Please contact support.' });
+      }
     }
 
     const applicationData = req.body;
     
     // Automate payment verification status updates
     applicationData.status = 'Verified';
-    applicationData.paymentId = razorpay_payment_id;
-    applicationData.transactionId = razorpay_payment_id;
-    applicationData.paymentRequestId = razorpay_order_id;
-    applicationData.verifiedBy = 'Razorpay';
+    applicationData.paymentId = req.body.razorpay_payment_id;
+    applicationData.transactionId = req.body.razorpay_payment_id;
+    applicationData.paymentRequestId = req.body.razorpay_order_id;
+    applicationData.verifiedBy = plan === 'Free' ? 'System (Free Plan)' : 'Razorpay';
     applicationData.verificationDate = Date.now();
     
     const count = await Application.countDocuments();
@@ -81,6 +96,20 @@ exports.submitDirectApplication = async (req, res, next) => {
   } catch (error) {
     console.error('Submit Application Error:', error.message);
     res.status(500).json({ error: 'Failed to submit application.' });
+  }
+};
+
+exports.getFoundationSeats = async (req, res, next) => {
+  try {
+    const count = await Application.countDocuments({ plan: 'Free', status: { $ne: 'Rejected' } });
+    res.status(200).json({
+      claimed: count,
+      total: 30,
+      available: Math.max(0, 30 - count)
+    });
+  } catch (error) {
+    console.error('Get Foundation Seats Error:', error.message);
+    res.status(500).json({ error: 'Failed to retrieve seat availability.' });
   }
 };
 

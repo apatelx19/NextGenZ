@@ -4,5 +4,6 @@ const applicationController = require('../controllers/applicationController');
 const { validateApplication } = require('../middleware/validators');
 
 router.post('/submit-application', validateApplication, applicationController.submitDirectApplication);
+router.get('/foundation-seats', applicationController.getFoundationSeats);
 
 module.exports = router;

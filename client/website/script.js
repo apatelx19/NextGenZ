@@ -63,13 +63,27 @@ const selectedPlan = document.getElementById("selectedPlan");
 
 planCards.forEach(card => {
   card.addEventListener("click", () => {
+    if (card.classList.contains("sold-out")) {
+      showCustomAlert("⚠️ All free seats for the Foundation Batch have been claimed. Please choose a standard plan.");
+      return;
+    }
     const plan = card.dataset.plan;
     selectedPlan.value = plan;
 
     planCards.forEach(c => c.classList.remove("active-plan"));
     card.classList.add("active-plan");
+
+    updateApplyButtonText();
   });
 });
+
+function updateApplyButtonText() {
+  if (selectedPlan.value === 'Free') {
+    buttonText.textContent = "Apply Now (Free) 🚀";
+  } else {
+    buttonText.textContent = "Apply Now 🚀";
+  }
+}
 
 // File Upload Logic
 uploadArea.addEventListener('click', () => resumeFileInput.click());
@@ -249,7 +263,50 @@ form.addEventListener("submit", async (e) => {
     buttonText.textContent = "Uploading Resume...";
     const uploadData = await uploadResumeToServer(selectedFile);
 
-    // 2. Create Razorpay Payment Order on the backend
+    // 2. Bypass payment gateway for Free Plan
+    if (plan === 'Free') {
+      buttonText.textContent = "Submitting Free Application...";
+      
+      const applicationData = {
+        fullName: document.getElementById("fullName").value,
+        email: document.getElementById("email").value,
+        phone: document.getElementById("phone").value,
+        college: document.getElementById("college").value,
+        course: document.getElementById("course").value,
+        year: document.getElementById("year").value,
+        domain: selectedDomain.value,
+        plan: plan,
+        resume: {
+          url: uploadData.fileUrl,
+          publicId: uploadData.publicId,
+          fileName: selectedFile.name
+        },
+        linkedin: document.getElementById("linkedin").value,
+        github: document.getElementById("github").value,
+        whyJoin: document.getElementById("whyJoin").value
+      };
+
+      const submitResponse = await fetch("/api/submit-application", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(applicationData)
+      });
+
+      const submitData = await submitResponse.json();
+      if (!submitResponse.ok) {
+        throw new Error(submitData.error || "Failed to submit free application.");
+      }
+
+      // Open success modal
+      openModal('successModal');
+      // Refresh seats count
+      if (typeof initFoundationSeats === 'function') {
+        initFoundationSeats();
+      }
+      return;
+    }
+
+    // 3. Create Razorpay Payment Order on the backend for standard plans
     buttonText.textContent = "Initiating Payment Gateway...";
     const orderResponse = await fetch("/api/payment/create-order", {
       method: "POST",
@@ -262,7 +319,7 @@ form.addEventListener("submit", async (e) => {
       throw new Error(orderData.message || "Failed to initiate payment transaction.");
     }
 
-    // 3. Open Razorpay Checkout Modal
+    // 4. Open Razorpay Checkout Modal
     const options = {
       key: orderData.key,
       amount: orderData.amount,
@@ -850,4 +907,97 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // Fetch foundation batch seats
+  initFoundationSeats();
+
 });
+
+async function initFoundationSeats() {
+  const freePlanCard = document.getElementById("freePlanCard");
+  const foundationBanner = document.getElementById("foundationBanner");
+  const seatsLeftCounter = document.getElementById("seatsLeftCounter");
+  const foundationProgressBar = document.getElementById("foundationProgressBar");
+  const foundationBannerCounter = document.getElementById("foundationBannerCounter");
+  
+  if (!freePlanCard || !foundationBanner) return;
+
+  try {
+    const response = await fetch("/api/foundation-seats");
+    if (!response.ok) throw new Error("Failed to fetch seats.");
+    const data = await response.json();
+
+    const claimed = data.claimed || 0;
+    const total = data.total || 30;
+    const available = data.available !== undefined ? data.available : 30;
+    const percentage = Math.round((claimed / total) * 100);
+
+    if (available > 0) {
+      foundationBanner.style.display = "block";
+      freePlanCard.style.display = "block";
+      
+      // Update Banner progress
+      if (foundationProgressBar) {
+        foundationProgressBar.style.width = `${percentage}%`;
+        foundationProgressBar.style.background = "#ff9800";
+      }
+      if (foundationBannerCounter) {
+        foundationBannerCounter.textContent = `${claimed} / ${total} Seats Claimed (${available} Left!)`;
+      }
+      
+      // Update Card
+      if (seatsLeftCounter) {
+        seatsLeftCounter.textContent = `${available} seats remaining!`;
+        seatsLeftCounter.style.color = "#ff9800";
+      }
+      freePlanCard.classList.remove("sold-out");
+      
+      // Update badge
+      const freeBadge = document.getElementById("freeBadge");
+      if (freeBadge) {
+        freeBadge.style.display = "inline-block";
+        freeBadge.textContent = "30 SEATS ONLY";
+        freeBadge.style.background = "#e67e22";
+      }
+    } else {
+      foundationBanner.style.display = "block";
+      freePlanCard.style.display = "block";
+      
+      // Update Banner progress as full / Sold Out
+      if (foundationProgressBar) {
+        foundationProgressBar.style.width = "100%";
+        foundationProgressBar.style.background = "#e74c3c";
+      }
+      if (foundationBannerCounter) {
+        foundationBannerCounter.textContent = `All 30 Seats Claimed (Sold Out)`;
+      }
+      
+      // Update Card
+      if (seatsLeftCounter) {
+        seatsLeftCounter.textContent = "SOLD OUT";
+        seatsLeftCounter.style.color = "#e74c3c";
+      }
+      freePlanCard.classList.add("sold-out");
+      
+      const freeBadge = document.getElementById("freeBadge");
+      if (freeBadge) {
+        freeBadge.style.display = "inline-block";
+        freeBadge.textContent = "SOLD OUT";
+        freeBadge.style.background = "#e74c3c";
+      }
+
+      // If active plan is currently set to Free, reset it to Gold
+      const selectedPlan = document.getElementById("selectedPlan");
+      if (selectedPlan && selectedPlan.value === "Free") {
+        selectedPlan.value = "Gold";
+        freePlanCard.classList.remove("active-plan");
+        const goldPlanCard = document.querySelector('.plan-card[data-plan="Gold"]');
+        if (goldPlanCard) goldPlanCard.classList.add("active-plan");
+        if (typeof updateApplyButtonText === 'function') {
+          updateApplyButtonText();
+        }
+      }
+    }
+  } catch (error) {
+    console.error("Error loading foundation seats count:", error);
+  }
+}
