@@ -38,7 +38,7 @@ module.exports = (data) => {
         </table>
 
         <div style="text-align: center;">
-          <a href="http://localhost:3000/admin/" class="btn">View in Dashboard</a>
+          <a href="${process.env.ADMIN_DASHBOARD_URL || 'https://nextgenztech.online/admin/'}" class="btn">View in Dashboard</a>
         </div>
       </div>
       <div class="footer">
