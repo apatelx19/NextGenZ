@@ -31,6 +31,7 @@
         <li data-view="applications"><i class="fas fa-users" style="margin-right: 8px;"></i> Applications</li>
         <li data-view="completed"><i class="fas fa-certificate" style="margin-right: 8px;"></i> Completed</li>
         <li data-view="reviews"><i class="fas fa-star" style="margin-right: 8px;"></i> Reviews</li>
+        <li data-view="settings"><i class="fas fa-cog" style="margin-right: 8px;"></i> Settings</li>
       </ul>
       <div class="sidebar-footer">
         <button id="logoutBtn" class="btn danger-btn"><i class="fas fa-sign-out-alt"></i> Logout</button>
@@ -291,6 +292,44 @@
                 <!-- JS Populated -->
               </tbody>
             </table>
+          </div>
+        </div>
+
+        <!-- Settings View (Hidden by default) -->
+        <div id="settingsView" style="display: none;">
+          <div class="table-container" style="max-width: 600px; margin: 0 auto; padding: 24px;">
+            <h3>Security Settings</h3>
+            <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 16px 0;">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+              <div>
+                <h4 style="margin: 0; font-size: 1.1rem; color: #fff;">Two-Factor Authentication (2FA)</h4>
+                <p style="margin: 4px 0 0 0; font-size: 0.85rem; opacity: 0.7;">Secure your administrator account using TOTP (Google Authenticator / Authy).</p>
+              </div>
+              <div>
+                <button id="toggle2faBtn" class="btn primary-btn" style="min-width: 120px; padding: 10px 16px;">Enable 2FA</button>
+              </div>
+            </div>
+
+            <!-- 2FA Setup Form (Hidden by default) -->
+            <div id="setup2faSection" style="display: none; background: rgba(255,255,255,0.05); border: 1px dashed var(--border-color); padding: 16px; border-radius: 8px; margin-top: 16px; text-align: center;">
+              <p style="font-size: 0.9rem; margin-bottom: 16px;">Scan the QR code below using your authenticator app, or manually enter the secret key.</p>
+              <div id="qrCodeContainer" style="background: #fff; padding: 10px; width: 220px; height: 220px; margin: 0 auto 16px auto; display: flex; justify-content: center; align-items: center; border-radius: 8px;">
+                <img id="tfaQrImg" src="" alt="2FA QR Code" style="width: 200px; height: 200px;">
+              </div>
+              <div style="margin-bottom: 16px;">
+                <label style="font-size: 0.8rem; font-weight: 700; opacity: 0.7; display: block; text-transform: uppercase;">Secret Key</label>
+                <code id="tfaSecretCode" style="font-size: 1.1rem; font-weight: 700; color: var(--accent-color); letter-spacing: 2px; background: rgba(0,0,0,0.2); padding: 4px 8px; border-radius: 4px; display: inline-block; margin-top: 4px;"></code>
+              </div>
+              <div class="input-group" style="max-width: 300px; margin: 0 auto 16px auto;">
+                <label for="tfaVerificationCode">Verification Code</label>
+                <input type="text" id="tfaVerificationCode" placeholder="Enter 6-digit code" maxlength="6" style="text-align: center; letter-spacing: 4px; font-size: 1.1rem; background: rgba(0,0,0,0.3); border: 1px solid var(--border-color); color: #fff; border-radius: 4px; padding: 8px;">
+              </div>
+              <div style="display: flex; gap: 12px; justify-content: center;">
+                <button id="cancel2faBtn" class="btn secondary" style="padding: 10px 16px;">Cancel</button>
+                <button id="confirm2faBtn" class="btn primary-btn" style="padding: 10px 16px;">Verify & Enable</button>
+              </div>
+            </div>
           </div>
         </div>
 

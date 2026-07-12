@@ -54,6 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const applicationsView = document.getElementById('applicationsView');
   const completedView = document.getElementById('completedView');
   const reviewsView = document.getElementById('reviewsView');
+  const settingsView = document.getElementById('settingsView');
 
   navLinks.forEach(link => {
     link.addEventListener('click', () => {
@@ -65,6 +66,7 @@ document.addEventListener('DOMContentLoaded', () => {
       applicationsView.style.display = 'none';
       completedView.style.display = 'none';
       reviewsView.style.display = 'none';
+      settingsView.style.display = 'none';
 
       if(view === 'dashboard') dashboardView.style.display = 'block';
       else if (view === 'applications') applicationsView.style.display = 'block';
@@ -76,7 +78,110 @@ document.addEventListener('DOMContentLoaded', () => {
         reviewsView.style.display = 'block';
         fetchReviews();
       }
+      else if (view === 'settings') {
+        settingsView.style.display = 'block';
+        fetch2FAStatus();
+      }
     });
+  });
+
+  // --- Two-Factor Authentication (2FA) State & Event Listeners ---
+  let tfaSecret = '';
+  const toggle2faBtn = document.getElementById('toggle2faBtn');
+  const setup2faSection = document.getElementById('setup2faSection');
+  const cancel2faBtn = document.getElementById('cancel2faBtn');
+  const confirm2faBtn = document.getElementById('confirm2faBtn');
+  const tfaVerificationCodeInput = document.getElementById('tfaVerificationCode');
+
+  async function fetch2FAStatus() {
+    try {
+      const response = await fetch('/api/auth/2fa/status', { headers });
+      const data = await response.json();
+      if (data.success) {
+        if (data.enabled) {
+          toggle2faBtn.textContent = 'Disable 2FA';
+          toggle2faBtn.style.background = '#e74c3c';
+        } else {
+          toggle2faBtn.textContent = 'Enable 2FA';
+          toggle2faBtn.style.background = '';
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching 2FA status:', err);
+    }
+  }
+
+  toggle2faBtn.addEventListener('click', async () => {
+    if (toggle2faBtn.textContent === 'Enable 2FA') {
+      // Initiate 2FA Setup
+      try {
+        const response = await fetch('/api/auth/2fa/setup', {
+          method: 'POST',
+          headers
+        });
+        const data = await response.json();
+        if (data.success) {
+          tfaSecret = data.secret;
+          document.getElementById('tfaSecretCode').textContent = data.secret;
+          document.getElementById('tfaQrImg').src = `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(data.otpauthUrl)}&size=200x200`;
+          setup2faSection.style.display = 'block';
+          tfaVerificationCodeInput.value = '';
+          tfaVerificationCodeInput.focus();
+        }
+      } catch (err) {
+        alert('Failed to initialize 2FA setup.');
+      }
+    } else {
+      // Disable 2FA
+      if (confirm('Are you sure you want to disable 2FA? This will lower your account security.')) {
+        try {
+          const response = await fetch('/api/auth/2fa/disable', {
+            method: 'POST',
+            headers
+          });
+          const data = await response.json();
+          if (data.success) {
+            alert('2FA disabled successfully.');
+            setup2faSection.style.display = 'none';
+            fetch2FAStatus();
+          } else {
+            alert(data.message || 'Failed to disable 2FA.');
+          }
+        } catch (err) {
+          alert('Error communication with backend.');
+        }
+      }
+    }
+  });
+
+  cancel2faBtn.addEventListener('click', () => {
+    setup2faSection.style.display = 'none';
+  });
+
+  confirm2faBtn.addEventListener('click', async () => {
+    const code = tfaVerificationCodeInput.value.trim();
+    if (code.length !== 6 || isNaN(code)) {
+      alert('Please enter a valid 6-digit verification code.');
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/auth/2fa/verify-and-enable', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ secret: tfaSecret, code })
+      });
+      const data = await response.json();
+      if (data.success) {
+        alert('2FA enabled successfully!');
+        setup2faSection.style.display = 'none';
+        fetch2FAStatus();
+      } else {
+        alert(data.message || 'Invalid verification code. Please try again.');
+      }
+    } catch (err) {
+      alert('Error verifying code.');
+    }
   });
 
   document.getElementById('globalDateFilter').addEventListener('change', (e) => {

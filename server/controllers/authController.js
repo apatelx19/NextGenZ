@@ -164,6 +164,18 @@ exports.verify2FALogin = async (req, res, next) => {
   }
 };
 
+exports.get2FAStatus = async (req, res, next) => {
+  try {
+    const admin = await Admin.findById(req.adminId);
+    if (!admin) {
+      return res.status(404).json({ success: false, message: 'Admin not found.' });
+    }
+    res.status(200).json({ success: true, enabled: admin.twoFactorEnabled });
+  } catch (error) {
+    next(error);
+  }
+};
+
 exports.setup2FA = async (req, res, next) => {
   try {
     const admin = await Admin.findById(req.adminId);

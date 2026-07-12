@@ -10,6 +10,7 @@ router.post('/verify-2fa-login', authController.verify2FALogin);
 router.post('/logout', doubleCsrfProtection, authController.logout);
 
 // Protected 2FA endpoints
+router.get('/2fa/status', auth, authController.get2FAStatus);
 router.post('/2fa/setup', auth, doubleCsrfProtection, authController.setup2FA);
 router.post('/2fa/verify-and-enable', auth, doubleCsrfProtection, authController.verifyAndEnable2FA);
 router.post('/2fa/disable', auth, doubleCsrfProtection, authController.disable2FA);
