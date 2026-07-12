@@ -16,11 +16,11 @@ exports.createOrder = async (req, res) => {
     const { plan } = req.body;
     
     // Calculate price based on plan
-    let amount = 999; // Default Gold
+    let amount = 499; // Default Gold
     if (plan === 'Normal') {
-      amount = 499;
+      amount = 299;
     } else if (plan === 'Premium') {
-      amount = 1999;
+      amount = 1499;
     }
 
     const rzp = getRazorpayInstance();
