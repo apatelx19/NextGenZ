@@ -8,6 +8,7 @@ const adminSchema = new mongoose.Schema({
     required: true,
     validate: {
       validator: function(v) {
+        if (!this.isModified('password')) return true;
         // Minimum 8 characters, at least one uppercase letter, one lowercase letter, one number and one special character
         return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/.test(v);
       },
