@@ -6,6 +6,28 @@ const emailService = require('../services/emailService');
 
 exports.submitDirectApplication = async (req, res, next) => {
   try {
+    // Verify Cloudflare Turnstile token if configured
+    if (process.env.CLOUDFLARE_TURNSTILE_SECRET_KEY) {
+      const { turnstileToken } = req.body;
+      if (!turnstileToken) {
+        return res.status(400).json({ error: 'Security verification (bot protection) is required.' });
+      }
+      try {
+        const verifyUrl = 'https://challenges.cloudflare.com/turnstile/v0/siteverify';
+        const verifyRes = await axios.post(verifyUrl, new URLSearchParams({
+          secret: process.env.CLOUDFLARE_TURNSTILE_SECRET_KEY,
+          response: turnstileToken,
+          remoteip: req.ip
+        }));
+        if (!verifyRes.data.success) {
+          return res.status(400).json({ error: 'Security verification failed. Please refresh and try again.' });
+        }
+      } catch (err) {
+        console.error('Turnstile verification error:', err);
+        return res.status(500).json({ error: 'Failed to verify bot protection. Please try again.' });
+      }
+    }
+
     const { 
       email, 
       phone, 

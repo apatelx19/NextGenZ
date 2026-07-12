@@ -35,6 +35,7 @@
   
   <!-- Optimized Font Awesome Loading -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 </head>
 
 <body class="bg-light">
@@ -475,6 +476,11 @@
           <label for="agreeTerms">
               I have read and agree to the <a href="#" class="policy-link" data-modal="privacyModal">Privacy Policy</a> & <a href="#" class="policy-link" data-modal="termsModal">Terms & Conditions</a>.
           </label>
+      </div>
+
+      <!-- Cloudflare Turnstile bot protection -->
+      <div id="cf-turnstile-container" style="margin: 16px 0; display: flex; justify-content: center;">
+        <div class="cf-turnstile" data-sitekey="1x00000000000000000000AA" data-theme="light"></div>
       </div>
 
       <button type="submit" id="submit-button">

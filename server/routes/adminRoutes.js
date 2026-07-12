@@ -13,5 +13,6 @@ router.use(auth);
 router.get('/applications', adminController.getApplications);
 router.get('/application/:id', adminController.getApplicationById);
 router.delete('/application/:id', adminController.deleteApplication);
+router.get('/resume-download/:id', adminController.downloadResume);
 
 module.exports = router;

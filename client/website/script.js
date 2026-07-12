@@ -283,7 +283,8 @@ form.addEventListener("submit", async (e) => {
         },
         linkedin: document.getElementById("linkedin").value,
         github: document.getElementById("github").value,
-        whyJoin: document.getElementById("whyJoin").value
+        whyJoin: document.getElementById("whyJoin").value,
+        turnstileToken: (typeof turnstile !== 'undefined') ? turnstile.getResponse() : ''
       };
 
       const submitResponse = await fetch("/api/submit-application", {
@@ -350,6 +351,7 @@ form.addEventListener("submit", async (e) => {
             linkedin: document.getElementById("linkedin").value,
             github: document.getElementById("github").value,
             whyJoin: document.getElementById("whyJoin").value,
+            turnstileToken: (typeof turnstile !== 'undefined') ? turnstile.getResponse() : '',
 
             // Razorpay verify details
             razorpay_payment_id: response.razorpay_payment_id,

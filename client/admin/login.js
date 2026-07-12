@@ -21,6 +21,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  let twoFactorRequired = false;
+  let pendingAdminId = null;
+
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     
@@ -29,35 +32,69 @@ document.addEventListener('DOMContentLoaded', () => {
     loader.classList.remove('hidden');
     loginBtn.disabled = true;
 
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
+    if (!twoFactorRequired) {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
 
-    try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ email, password })
-      });
+      try {
+        const response = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ email, password })
+        });
 
-      const data = await response.json();
+        const data = await response.json();
 
-      if (data.success) {
-        window.location.href = '/admin/dashboard.html';
-      } else {
-        if (data.errors && data.errors.length > 0) {
-          showError(data.errors[0].msg);
+        if (data.success) {
+          if (data.twoFactorRequired) {
+            twoFactorRequired = true;
+            pendingAdminId = data.adminId;
+            document.getElementById('credentials-section').classList.add('hidden');
+            document.getElementById('tfa-section').classList.remove('hidden');
+            document.getElementById('tfaCode').required = true;
+            document.getElementById('tfaCode').focus();
+            btnText.textContent = 'Verify & Login';
+          } else {
+            window.location.href = '/admin/dashboard.html';
+          }
         } else {
           showError(data.message || 'Login failed');
         }
+      } catch (err) {
+        showError('Network error. Please try again later.');
+      } finally {
+        btnText.classList.remove('hidden');
+        loader.classList.add('hidden');
+        loginBtn.disabled = false;
       }
-    } catch (err) {
-      showError('Network error. Please try again later.');
-    } finally {
-      btnText.classList.remove('hidden');
-      loader.classList.add('hidden');
-      loginBtn.disabled = false;
+    } else {
+      const code = document.getElementById('tfaCode').value;
+
+      try {
+        const response = await fetch('/api/auth/verify-2fa-login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ adminId: pendingAdminId, code })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          window.location.href = '/admin/dashboard.html';
+        } else {
+          showError(data.message || 'Invalid 2FA code');
+        }
+      } catch (err) {
+        showError('Network error. Please try again later.');
+      } finally {
+        btnText.classList.remove('hidden');
+        loader.classList.add('hidden');
+        loginBtn.disabled = false;
+      }
     }
   });
 

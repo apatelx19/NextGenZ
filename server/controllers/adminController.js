@@ -86,3 +86,32 @@ exports.deleteApplication = async (req, res) => {
     res.status(500).json({ success: false, message: 'Server error deleting application' });
   }
 };
+
+// GET /api/admin/resume-download/:id
+exports.downloadResume = async (req, res) => {
+  try {
+    const application = await Application.findById(req.params.id);
+    if (!application) {
+      return res.status(404).json({ success: false, message: 'Application not found' });
+    }
+
+    const resumeUrl = application.resume && application.resume.url ? application.resume.url : application.resumeLink;
+    if (!resumeUrl || resumeUrl === '#') {
+      return res.status(404).json({ success: false, message: 'Resume not found' });
+    }
+
+    const axios = require('axios');
+    const response = await axios({
+      method: 'get',
+      url: resumeUrl,
+      responseType: 'stream'
+    });
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `inline; filename="resume_${application.fullName.replace(/[^a-zA-Z0-9]/g, '_')}.pdf"`);
+    response.data.pipe(res);
+  } catch (error) {
+    console.error('Error streaming resume:', error);
+    res.status(500).json({ success: false, message: 'Error retrieving resume' });
+  }
+};

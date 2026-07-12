@@ -689,14 +689,13 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('modalPlan').innerText = app.plan || 'Normal';
         document.getElementById('modalPayment').innerText = app.transactionId || 'N/A';
         
-        // Setup Resume links (Cloudinary supports appending fl_attachment to download)
-        const resumeUrl = app.resume && app.resume.url ? app.resume.url : (app.resumeLink || '#');
-        const downloadUrl = resumeUrl !== '#' ? resumeUrl.replace('/upload/', '/upload/fl_attachment/') : '#';
+        // Setup Resume links using secure backend proxy
+        const resumeUrl = `/api/admin/resume-download/${app._id}`;
         
         document.getElementById('modalResume').href = resumeUrl;
         
         const downloadBtn = document.getElementById('modalResumeDownload');
-        if(downloadBtn) downloadBtn.href = downloadUrl;
+        if(downloadBtn) downloadBtn.href = resumeUrl;
         
         document.getElementById('modalWhy').innerText = app.whyJoin;
         
