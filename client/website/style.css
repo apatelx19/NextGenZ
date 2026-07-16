@@ -1618,14 +1618,17 @@ body.bg-dark-active .modal-content {
 
 /* RESPONSIVE MEDIA QUERIES */
 @media (max-width: 1024px) {
-
+    .section {
+        padding: 90px 6%;
+    }
+    
     .footer-grid {
         grid-template-columns: 1.5fr 1fr 1fr 1fr;
         gap: 30px;
     }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 992px) {
     .hamburger {
         display: flex;
     }
@@ -1669,8 +1672,6 @@ body.bg-dark-active .modal-content {
         grid-template-columns: repeat(2, 1fr);
     }
     
-
-    
     .footer-grid {
         grid-template-columns: 1fr 1fr;
     }
@@ -1686,6 +1687,12 @@ body.bg-dark-active .modal-content {
     }
     .form-grid-2 *, .form-grid-3 * {
         grid-column: span 1 !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .section {
+        padding: 80px 4%;
     }
 }
 
