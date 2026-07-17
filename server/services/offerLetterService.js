@@ -77,14 +77,14 @@ class OfferLetterService {
 
         // ========== 2. Date & Salutation ==========
         doc.y = 140;
-        const currentDate = new Date().toLocaleDateString('en-US', {
+        const letterDate = new Date(applicationData.verificationDate || Date.now()).toLocaleDateString('en-US', {
           year: 'numeric', month: 'long', day: 'numeric'
         });
         
         doc.fillColor('#000000')
            .fontSize(11)
            .font('Helvetica-Bold')
-           .text(`Date: ${currentDate}`, 50, doc.y, { align: 'left' });
+           .text(`Date: ${letterDate}`, 50, doc.y, { align: 'left' });
            
         doc.moveDown(2);
         

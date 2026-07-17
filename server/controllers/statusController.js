@@ -5,7 +5,7 @@ const emailService = require('../services/emailService');
 // PUT /api/admin/application/:id/status
 exports.updateApplicationStatus = async (req, res) => {
   try {
-    const { status, remarks, internshipMode } = req.body;
+    const { status, remarks, internshipMode, verificationDate } = req.body;
     // Assuming req.admin contains the logged in admin details from auth middleware
     const adminName = req.admin ? req.admin.username : 'Admin'; 
 
@@ -33,10 +33,15 @@ exports.updateApplicationStatus = async (req, res) => {
     if (internshipMode) {
       application.internshipMode = internshipMode;
     }
+    if (verificationDate) {
+      application.verificationDate = new Date(verificationDate);
+    }
     application.updatedAt = Date.now();
     
     if (status === 'Verified') {
-      application.verificationDate = Date.now();
+      if (!verificationDate && !application.verificationDate) {
+        application.verificationDate = Date.now();
+      }
       application.verifiedBy = adminName;
     }
 

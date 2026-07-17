@@ -559,11 +559,14 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // --- API Helpers ---
-  async function updateStatusApi(id, status, remarks = '', internshipMode = null) {
+  async function updateStatusApi(id, status, remarks = '', internshipMode = null, verificationDate = null) {
     try {
       const payload = { status, remarks };
       if (internshipMode) {
         payload.internshipMode = internshipMode;
+      }
+      if (verificationDate) {
+        payload.verificationDate = verificationDate;
       }
       const res = await fetch(`/api/admin/application/${id}/status`, {
         method: 'PUT',
@@ -798,6 +801,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('modalPlan').innerText = app.plan || 'Normal';
         document.getElementById('modalPayment').innerText = app.transactionId || 'N/A';
         document.getElementById('modalInternshipMode').value = app.internshipMode || 'Remote';
+        document.getElementById('modalVerificationDate').value = app.verificationDate ? new Date(app.verificationDate).toISOString().split('T')[0] : '';
         
         // Setup Resume links using secure backend proxy
         const resumeUrl = `/api/admin/resume-download/${app._id}`;
@@ -873,7 +877,8 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('updateStatusBtn').addEventListener('click', async () => {
     const status = document.getElementById('updateStatusSelect').value;
     const internshipMode = document.getElementById('modalInternshipMode').value;
-    await updateStatusApi(currentAppId, status, '', internshipMode);
+    const verificationDate = document.getElementById('modalVerificationDate').value;
+    await updateStatusApi(currentAppId, status, '', internshipMode, verificationDate);
     modal.style.display = "none";
   });
 
