@@ -5,7 +5,7 @@ const emailService = require('../services/emailService');
 // PUT /api/admin/application/:id/status
 exports.updateApplicationStatus = async (req, res) => {
   try {
-    const { status, remarks } = req.body;
+    const { status, remarks, internshipMode } = req.body;
     // Assuming req.admin contains the logged in admin details from auth middleware
     const adminName = req.admin ? req.admin.username : 'Admin'; 
 
@@ -13,6 +13,10 @@ exports.updateApplicationStatus = async (req, res) => {
     
     if (!allowedStatuses.includes(status)) {
       return res.status(400).json({ success: false, message: 'Invalid status' });
+    }
+
+    if (internshipMode && !['Remote', 'Onsite'].includes(internshipMode)) {
+      return res.status(400).json({ success: false, message: 'Invalid internship mode' });
     }
 
     const application = await Application.findById(req.params.id);
@@ -26,6 +30,9 @@ exports.updateApplicationStatus = async (req, res) => {
     }
 
     application.status = status;
+    if (internshipMode) {
+      application.internshipMode = internshipMode;
+    }
     application.updatedAt = Date.now();
     
     if (status === 'Verified') {

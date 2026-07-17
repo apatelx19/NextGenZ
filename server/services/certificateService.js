@@ -89,9 +89,10 @@ class CertificateService {
         // 3. Certificate Description Text (Serif Times-Roman, matching mockup spacing & casing)
         const domainStr = applicationData.domain || 'Software Internship';
         const dates = this.getBatchDates(applicationData.internshipBatch);
+        const modeStr = applicationData.internshipMode === 'Onsite' ? 'onsite' : 'remote';
         
         doc.y = 360;
-        const certText = `for outstanding performance and successful completion of the 1-month internship program in ${domainStr} at NextGenZ Tech from ${dates.start} to ${dates.end}.`;
+        const certText = `for outstanding performance and successful completion of the 1-month ${modeStr} internship program in ${domainStr} at NextGenZ Tech from ${dates.start} to ${dates.end}.`;
         
         doc.fillColor('#222222')
            .fontSize(14.5)

@@ -82,7 +82,8 @@ router.get('/verify/:id', async (req, res) => {
       internshipBatch: application.internshipBatch,
       status: application.status,
       verificationDate: application.verificationDate || application.updatedAt,
-      applicationId: application.applicationId
+      applicationId: application.applicationId,
+      internshipMode: application.internshipMode || 'Remote'
     };
 
     res.json({ success: true, verified: true, application: verificationData });
