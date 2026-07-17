@@ -559,7 +559,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // --- API Helpers ---
-  async function updateStatusApi(id, status, remarks = '', internshipMode = null, verificationDate = null) {
+  async function updateStatusApi(id, status, remarks = '', internshipMode = null, verificationDate = null, internshipStartDate = null, internshipEndDate = null) {
     try {
       const payload = { status, remarks };
       if (internshipMode) {
@@ -567,6 +567,12 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       if (verificationDate) {
         payload.verificationDate = verificationDate;
+      }
+      if (internshipStartDate) {
+        payload.internshipStartDate = internshipStartDate;
+      }
+      if (internshipEndDate) {
+        payload.internshipEndDate = internshipEndDate;
       }
       const res = await fetch(`/api/admin/application/${id}/status`, {
         method: 'PUT',
@@ -802,6 +808,8 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('modalPayment').innerText = app.transactionId || 'N/A';
         document.getElementById('modalInternshipMode').value = app.internshipMode || 'Remote';
         document.getElementById('modalVerificationDate').value = app.verificationDate ? new Date(app.verificationDate).toISOString().split('T')[0] : '';
+        document.getElementById('modalStartDate').value = app.internshipStartDate ? new Date(app.internshipStartDate).toISOString().split('T')[0] : '';
+        document.getElementById('modalEndDate').value = app.internshipEndDate ? new Date(app.internshipEndDate).toISOString().split('T')[0] : '';
         
         // Setup Resume links using secure backend proxy
         const resumeUrl = `/api/admin/resume-download/${app._id}`;
@@ -874,11 +882,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // --- Actions ---
 
+  document.getElementById('modalStartDate').addEventListener('change', (e) => {
+    const startDateVal = e.target.value;
+    if (startDateVal) {
+      const date = new Date(startDateVal);
+      const lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+      const yyyy = lastDay.getFullYear();
+      const mm = String(lastDay.getMonth() + 1).padStart(2, '0');
+      const dd = String(lastDay.getDate()).padStart(2, '0');
+      const formattedEndDate = `${yyyy}-${mm}-${dd}`;
+      
+      document.getElementById('modalEndDate').value = formattedEndDate;
+      document.getElementById('modalVerificationDate').value = formattedEndDate;
+    }
+  });
+
   document.getElementById('updateStatusBtn').addEventListener('click', async () => {
     const status = document.getElementById('updateStatusSelect').value;
     const internshipMode = document.getElementById('modalInternshipMode').value;
     const verificationDate = document.getElementById('modalVerificationDate').value;
-    await updateStatusApi(currentAppId, status, '', internshipMode, verificationDate);
+    const internshipStartDate = document.getElementById('modalStartDate').value;
+    const internshipEndDate = document.getElementById('modalEndDate').value;
+    await updateStatusApi(currentAppId, status, '', internshipMode, verificationDate, internshipStartDate, internshipEndDate);
     modal.style.display = "none";
   });
 

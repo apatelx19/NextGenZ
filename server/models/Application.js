@@ -42,6 +42,8 @@ const applicationSchema = new mongoose.Schema({
   interviewDate: { type: Date },
   internshipBatch: { type: String, default: "July 2026" },
   internshipMode: { type: String, enum: ["Remote", "Onsite"], default: "Remote" },
+  internshipStartDate: { type: Date },
+  internshipEndDate: { type: Date },
   createdAt: { type: Date, default: Date.now, index: true },
   updatedAt: { type: Date, default: Date.now }
 });
